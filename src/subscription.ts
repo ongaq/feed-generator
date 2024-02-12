@@ -1,39 +1,54 @@
+import type { Post } from './db/schema'
 import {
   OutputSchema as RepoEvent,
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
-import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
+import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
+import kuromoji from 'kuromoji';
 
+function isSUTARE(post: string, keyword: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    kuromoji.builder({ dicPath: './dict' }).build((err, tokenizer) => {
+      if (err) resolve(false)
+
+      try {
+        const tokens = tokenizer.tokenize(post)
+
+        for (const token of tokens) {
+          if (token.surface_form === keyword && token.pos === '名詞') {
+            return resolve(true)
+          }
+        }
+        return resolve(false)
+      } catch (e) {
+        console.error(e)
+        return resolve(false)
+      }
+    })
+  })
+}
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
     if (!isCommit(evt)) return
     const ops = await getOpsByType(evt)
-
-    // This logs the text of every post off the firehose.
-    // Just for fun :)
-    // Delete before actually using
-    // for (const post of ops.posts.creates) {
-    //   console.log(post.record.text)
-    // }
-
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
-    const postsToCreate = ops.posts.creates
-      .filter((create) => {
-        const text = create.record.text;
-        const regExp = /崩壊スターレイル|崩スタ|スタレ|スターレイル|(ho(n|u)kai:?\s?)?star\s?rail|#(姫子|トパーズ(＆カブ)?|アスター|フック|桂乃芬|彦卿|ジェパード|鏡流|ルアン(・)?メェイ|三月なのか|ペラ|ヘルタ|ミーシャ|白露|景元|カフカ|停雲|セーバル|アーラン|ブローニャ|刃|フォフォ|ブラックスワン|丹恒|サンポ|ヴェルト|羅刹|丹恒・飲月|(Dr\.)?レイシオ|御空|ゼーレ|銀狼|符玄|青雀|リンクス|雪衣|クラーラ|アルジェンティ|素裳|ナターシャ|ルカ|寒鴉|ホタル|花火)/ig;
-        return text.match(regExp) !== null;
-      })
-      .map((create) => {
-        // map alf-related posts to a db row
-        return {
+    let postsToCreate: Post[] = [];
+
+    for (const create of ops.posts.creates) {
+      const text = create.record.text;
+      const regExp = /崩壊スターレイル|崩スタ|スターレイル|(ho(n|u)kai:?\s?)?star\s?rail|ピノコニー|仙舟|羅浮|ヤリーロ|桂乃芬|彦卿|鏡流|ルアン(・)?メェイ|三月なのか|停雲|ブラックスワン|丹恒|(丹恒(・)?)?飲月|(Dr\.)?レイシオ|アベンチュリン|符玄|素裳|寒鴉|#(hsr|姫子|トパーズ(＆カブ)?|アスター|フック|ジェパード|ペラ|ヘルタ|ミーシャ|白露|景元|カフカ|セーバル|アーラン|ブローニャ|刃|フォフォ|サンポ|ヴェルト|羅刹|御空|ゼーレ|銀狼|青雀|リンクス|雪衣|クラーラ|アルジェンティ|ナターシャ|ルカ|ホタル|花火)/ig;
+
+      if (text.match(regExp) !== null || (text.includes('スタレ') && await isSUTARE(text, 'スタレ'))) {
+        postsToCreate.push({
           uri: create.uri,
           cid: create.cid,
           text: create.record.text,
           replyParent: create.record?.reply?.parent.uri ?? null,
           replyRoot: create.record?.reply?.root.uri ?? null,
           indexedAt: new Date().toISOString(),
-        }
-      })
+        });
+      }
+    }
 
     if (postsToDelete.length > 0) {
       await this.db
