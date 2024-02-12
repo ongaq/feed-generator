@@ -15,7 +15,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     for (let i = 0, len = ops.posts.creates.length; i < len; i++) {
       const create = ops.posts.creates[i]
       const text = create.record.text
-      const regExp = /崩壊スターレイル|崩スタ|スタレ|スターレイル|(ho(n|u)kai:?\s?)?star\s?rail|Penacony|ピノコニー|仙舟|羅浮|ヤリーロ|桂乃芬|彦卿|鏡流|ルアン(・)?メェイ|三月なのか|停雲|ブラックスワン|丹恒|(丹恒(・)?)?飲月|(Dr\.)?レイシオ|アベンチュリン|符玄|素裳|寒鴉|#(hsr|姫子|トパーズ(＆カブ)?|アスター|フック|ジェパード|ペラ|ヘルタ|ミーシャ|白露|景元|カフカ|セーバル|アーラン|ブローニャ|刃|フォフォ|サンポ|ヴェルト|羅刹|御空|ゼーレ|銀狼|青雀|リンクス|雪衣|クラーラ|アルジェンティ|ナターシャ|ルカ|ホタル|花火)/ig;
+      const regExp = /崩壊スターレイル|崩スタ|スタレ|スターレイル|(ho(n|u)kai:?\s?)?star\s?rail|Penacony|ピノコニー|仙舟|羅浮|ヤリーロ|桂乃芬|彦卿|鏡流|ルアン(・)?メェイ|三月なのか|停雲|ブラックスワン|丹恒|(丹恒(・)?)?飲月|(Dr\.)?レイシオ|アベンチュリン|符玄|素裳|寒鴉|#(hsr|姫子|トパーズ(＆カブ)?|アスター|フック|ジェパード|ペラ|ヘルタ|ミーシャ|白露|景元|カフカ|セーバル|アーラン|ブローニャ|刃|フォフォ|サンポ|ヴェルト|羅刹|御空|ゼーレ|銀狼|青雀|リンクス|雪衣|クラーラ|アルジェンティ|ナターシャ|ルカ|ホタル|花火)\s/ig;
 
       if (text.match(regExp) !== null) {
         postsToCreate.push({
