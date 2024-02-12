@@ -387,13 +387,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/doublearray@npm:*":
-  version: 0.0.32
-  resolution: "@types/doublearray@npm:0.0.32"
-  checksum: 10c0/690f1204b4eb4d3e3850e48d79b846005e2bfbd4e9e1e3d49435875212d5ae826bd90f1af7f52c9acd2d9dd57a161c3a8845bec93e9d5bd1e3f1d5f386fdd817
-  languageName: node
-  linkType: hard
-
 "@types/express-serve-static-core@npm:^4.17.33":
   version: 4.17.43
   resolution: "@types/express-serve-static-core@npm:4.17.43"
@@ -422,15 +415,6 @@ __metadata:
   version: 2.0.4
   resolution: "@types/http-errors@npm:2.0.4"
   checksum: 10c0/494670a57ad4062fee6c575047ad5782506dd35a6b9ed3894cea65830a94367bd84ba302eb3dde331871f6d70ca287bfedb1b2cf658e6132cd2cbd427ab56836
-  languageName: node
-  linkType: hard
-
-"@types/kuromoji@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "@types/kuromoji@npm:0.1.3"
-  dependencies:
-    "@types/doublearray": "npm:*"
-  checksum: 10c0/7e6f92f2e0adc1cd5397ba5535cdd8a8e7924f1b0e0c1716c3c95cfba32efd08b6c3e66f5af63769a3de963b5af1be0ce26d4c8d0d9d1f327f7f563ffa67eb72
   languageName: node
   linkType: hard
 
@@ -594,15 +578,6 @@ __metadata:
   version: 1.1.1
   resolution: "array-flatten@npm:1.1.1"
   checksum: 10c0/806966c8abb2f858b08f5324d9d18d7737480610f3bd5d3498aaae6eb5efdc501a884ba019c9b4a8f02ff67002058749d05548fd42fa8643f02c9c7f22198b91
-  languageName: node
-  linkType: hard
-
-"async@npm:^2.0.1":
-  version: 2.6.4
-  resolution: "async@npm:2.6.4"
-  dependencies:
-    lodash: "npm:^4.17.14"
-  checksum: 10c0/0ebb3273ef96513389520adc88e0d3c45e523d03653cc9b66f5c46f4239444294899bfd13d2b569e7dbfde7da2235c35cf5fd3ece9524f935d41bbe4efccdad0
   languageName: node
   linkType: hard
 
@@ -1000,13 +975,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"doublearray@npm:0.0.2":
-  version: 0.0.2
-  resolution: "doublearray@npm:0.0.2"
-  checksum: 10c0/ac830e612e17d0a45084e0ab5cc6255e79859a9135acde4b1bb3cee827ab0a29213f42916a72a240975ed905a4f9cade7844456f3b0d6ce3731fbf681561433e
-  languageName: node
-  linkType: hard
-
 "eastasianwidth@npm:^0.2.0":
   version: 0.2.0
   resolution: "eastasianwidth@npm:0.2.0"
@@ -1181,12 +1149,10 @@ __metadata:
     "@atproto/xrpc-server": "npm:^0.3.2"
     "@types/better-sqlite3": "npm:^7.6.4"
     "@types/express": "npm:^4.17.17"
-    "@types/kuromoji": "npm:^0.1.3"
     "@types/node": "npm:^20.1.2"
     better-sqlite3: "npm:^8.3.0"
     dotenv: "npm:^16.0.3"
     express: "npm:^4.18.2"
-    kuromoji: "npm:^0.1.2"
     kysely: "npm:^0.22.0"
     multiformats: "npm:^9.9.0"
     ts-node: "npm:^10.9.1"
@@ -1548,28 +1514,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kuromoji@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "kuromoji@npm:0.1.2"
-  dependencies:
-    async: "npm:^2.0.1"
-    doublearray: "npm:0.0.2"
-    zlibjs: "npm:^0.3.1"
-  checksum: 10c0/abc799f869db4bd21a8d30ccd764a059dcff56728b7dc9a190eea5b2d01bf90ed47e13445706de865e38ca51b8a48685497e257cae8fc7e646cdab65145e9692
-  languageName: node
-  linkType: hard
-
 "kysely@npm:^0.22.0":
   version: 0.22.0
   resolution: "kysely@npm:0.22.0"
   checksum: 10c0/96aea0d1dd417b171f21fa7bb16b6c95e1bc553721c053beea130f3fe3c242b9eb75787d7921dba25eeb9c23791eacfe1aa3d874f592c984bf2218c54a30aa62
-  languageName: node
-  linkType: hard
-
-"lodash@npm:^4.17.14":
-  version: 4.17.21
-  resolution: "lodash@npm:4.17.21"
-  checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
   languageName: node
   linkType: hard
 
@@ -2740,13 +2688,6 @@ __metadata:
   version: 3.1.1
   resolution: "yn@npm:3.1.1"
   checksum: 10c0/0732468dd7622ed8a274f640f191f3eaf1f39d5349a1b72836df484998d7d9807fbea094e2f5486d6b0cd2414aad5775972df0e68f8604db89a239f0f4bf7443
-  languageName: node
-  linkType: hard
-
-"zlibjs@npm:^0.3.1":
-  version: 0.3.1
-  resolution: "zlibjs@npm:0.3.1"
-  checksum: 10c0/2d110bfcb0f8b8dbf225423f6556da9c5bca95c8b849c1218983676158a24b5cd0350357e0c4d504e27f8c7e18d471d9712576f35114a81a51bcf83453f02beb
   languageName: node
   linkType: hard
 
