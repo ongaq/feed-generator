@@ -9,9 +9,6 @@ export const handler = async (ctx: AppContext, params: QueryParams) => {
   let builder = ctx.db
     .selectFrom('post')
     .selectAll()
-    .where('text', 'not like', '%act.hoyoverse.com/sr/event%')
-    .where('text', 'not like', '%グラブル%')
-    .where('text', 'not like', '%インスタレーション%')
     .orderBy('indexedAt', 'desc')
     .orderBy('cid', 'desc')
     .limit(params.limit)
