@@ -24,12 +24,16 @@ const matchPatterns = [
 const excludePatterns = [
   'act\\.hoyoverse\\.com\\/sr\\/event',
   'グラブル',
+  '^(?!.*デイリークエスト).*リーク.*',
+  'ヘルタイド',
+  'ヘルタースケルター',
+  'ベルリン',
   'インスタレーション',
   'dlsite\\.com',
   'dmm\\.co\\.jp',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'ig');
-const excludeRegExp = new RegExp(excludePatterns.join('|'), 'ig');
+const excludeRegExp = new RegExp(excludePatterns.join('|'), 'igs');
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
