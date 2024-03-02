@@ -24,7 +24,7 @@ const matchPatterns = [
   // 汎用的なキャラ名なのでハッシュタグ付きのみ
   '#(hsr|姫子|トパーズ(＆カブ)?|アスター|フック|ペラ|ミーシャ|白露|カフカ|セーバル|アーラン|刃|フォフォ|サンポ|ヴェルト|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ルカ|ホタル|花火)\\s',
   // 敬称
-  '(姫子|トパーズ(＆カブ)?|アスター|フック|ペラ|ミーシャ|白露|カフカ|セーバル|アーラン|刃|フォフォ|サンポ|ヴェルト|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ルカ|ホタル|花火)(さん|ちゃん|くん|様)'
+  '(姫子|トパーズ(＆カブ)?|アスター|フック|ミーシャ|白露|カフカ|セーバル|アーラン|刃|フォフォ|サンポ|ヴェルト|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ホタル|花火)(さん|ちゃん|くん|様)'
 ];
 const excludePatterns = [
   '#東方',
@@ -52,7 +52,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     for (let i = 0, len = ops.posts.creates.length; i < len; i++) {
       const create = ops.posts.creates[i]
       const text = create.record.text
-      const hasReply = typeof create.record.reply !== 'undefined'
+      const hasReply = typeof create.record.reply !== 'undefined' || /^@/.test(text);
 
       if (regExp.test(text) && !excludeRegExp.test(text) && !hasReply) {
         postsToCreate.push({
