@@ -39,7 +39,15 @@ const matchPatterns = [
   '(姫子|トパーズ(＆カブ)?|フック|ミーシャ|白露|刃|サンポ|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ホタル|花火|黄泉)(さん|ちゃん|くん|様)'
 ];
 const excludePatterns = [
+  'ココロコネクト',
+  '稲葉姫子',
   '花火大会',
+  'ヘモグロビン',
+  'ニコ(・)?ロビン',
+  'ロビンマスク',
+  'ロビンとマリアン',
+  'ロビン(・)?フッド',
+  'クリストファー(・)?ロビン',
   '#東方',
   'act\\.hoyoverse\\.com\\/sr\\/event',
   'グラブル',
@@ -47,11 +55,18 @@ const excludePatterns = [
   'ワンピース',
   'ONE(\s)?PIECE',
   '海辺のカフカ',
+  '少年カフカ',
   '(シシド|フランツ)(・)?カフカ',
   '^(?!.*デイリークエスト).*リーク.*',
   'ベルリン',
+  'ヘルタイド',
+  'ヘルタースケルター',
   'dlsite\\.com',
   'dmm\\.co\\.jp',
+  'パスタ',
+  'レジスタレット',
+  'スタレビ',
+  'インスタレーション',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'ig');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'igs');
