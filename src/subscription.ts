@@ -49,6 +49,7 @@ const excludePatterns = [
   'ロビン(・)?フッド',
   'クリストファー(・)?ロビン',
   '#東方',
+  'playing-games\\.com',
   'act\\.hoyoverse\\.com\\/sr\\/event',
   'グラブル',
   '小鳥遊',
