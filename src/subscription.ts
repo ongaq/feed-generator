@@ -42,9 +42,6 @@ const matchPatterns = [
   '(姫子|トパーズ(＆カブ)?|フック|ミーシャ|白露|刃|サンポ|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ホタル|花火|黄泉)(さん|ちゃん|くん|様)'
 ];
 const excludePatterns = [
-  '萎え',
-  'モチベ',
-  'クソゲ',
   'ココロコネクト',
   '稲葉姫子',
   '花火大会',
@@ -64,6 +61,7 @@ const excludePatterns = [
   'ONE(\s)?PIECE',
   '海辺のカフカ',
   '少年カフカ',
+  'カフカの父親',
   '(シシド|フランツ)(・)?カフカ',
   '^(?!.*デイリークエスト).*リーク.*',
   'ベルリン',
@@ -75,6 +73,13 @@ const excludePatterns = [
   'レジスタレット',
   'スタレビ',
   'インスタレーション',
+  // ネガティブな単語
+  '面白く(な|無)い',
+  'つまらない',
+  'おもんな',
+  '萎え',
+  'モチベ',
+  'クソゲ',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'igu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'igs');
