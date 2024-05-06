@@ -80,6 +80,7 @@ const excludePatterns = [
   '弁護士ジェイド',
   'ユニーク魔法',
   'フロイド',
+  'マスシェフ',
   'ショックザハーツ',
   'genshin-goods\\.com',
   'kusogame\\.com',
@@ -87,6 +88,7 @@ const excludePatterns = [
   'act\\.hoyoverse\\.com\\/sr\\/event',
   'dlsite\\.com',
   'dmm\\.co\\.jp',
+  'rakuten\\.co\\.jp',
   // ネガティブな単語
   '面白く(な|無)い',
   'つまらない',
