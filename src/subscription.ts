@@ -105,6 +105,7 @@ const excludePatterns = [
   'geemato\\.com',
   'tiktok\\.com',
   'magmoe\\.com',
+  'mag\\.moe',
   'genshin-goods\\.com',
   'kusogame\\.com',
   'playing-games\\.com',
