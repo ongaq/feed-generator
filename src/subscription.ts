@@ -104,6 +104,8 @@ const excludePatterns = [
   'ショックザハーツ',
   '#TikTok',
   '#TikTokライト',
+  'MOD',
+  'gamebanana\\.com',
   'geemato\\.com',
   'tiktok\\.com',
   'magmoe\\.com',
