@@ -88,7 +88,7 @@ const excludePatterns = [
   '鳴潮',
   'なるしお',
   'めいちょう',
-  'ゼンゼロ|ゼンレスゾーン|Zenless Zone Zero|ZZZ',
+  'ゼンゼロ|ゼンレス|Zenless\s?Zone\s?Zero|ZZZ',
   'スプラトゥーン',
   'splatoon',
   'けもフレ|けものフレンズ',
