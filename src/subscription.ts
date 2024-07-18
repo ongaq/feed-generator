@@ -59,9 +59,11 @@ const matchPatterns = [
 const excludePatterns = [
   '#shindanmaker',
   'shindanmaker\\.com',
+  'の霊砂',
   'ウクライナ',
   'ミサイル',
-  'アスター30',
+  'アスター(30|麺)',
+  '銀座アスター',
   'ココロコネクト',
   '遠山景元',
   '(稲葉|刑部)姫子',
