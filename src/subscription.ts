@@ -60,6 +60,8 @@ const excludePatterns = [
   '#shindanmaker',
   'shindanmaker\\.com',
   'の霊砂',
+  'カクヨム',
+  'マドリード|チェルシー',
   'ウクライナ',
   'ミサイル',
   'アスター(30|麺)',
