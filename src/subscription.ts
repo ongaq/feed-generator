@@ -58,9 +58,10 @@ const matchPatterns = [
 ];
 const excludePatterns = [
   '#shindanmaker',
-  'shindanmaker\\.com',
-  'の霊砂',
+  'shindanmaker',
+  'kakuyomu',
   'カクヨム',
+  'の霊砂',
   'マドリード|チェルシー',
   'ウクライナ',
   'ミサイル',
@@ -81,7 +82,7 @@ const excludePatterns = [
   'ONE(\s)?PIECE',
   '蛍の光|ホタル(鑑賞|祭|見|観)|定点観測|ライブカメラ|ホタルの嫁入り',
   '(海辺の|少年)カフカ',
-  'カフカ(没|の(父親|日記)|(\s)?日記|全集|短編|断片|論|風)',
+  'カフカ(没|の(父親|日記|小説)|(\s)?日記|全集|短編|断片|論|風)',
   '素描集',
   '新潮',
   '怪獣8号',
