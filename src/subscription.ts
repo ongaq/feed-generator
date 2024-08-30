@@ -57,7 +57,7 @@ const matchPatterns = [
   'ヨウおじ',
 ];
 const excludePatterns = [
-  'MOOTS',
+  'MOOTS|mutuals',
   '#shindanmaker',
   'shindanmaker',
   'kakuyomu',
