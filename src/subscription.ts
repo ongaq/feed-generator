@@ -6,7 +6,7 @@ import {
 import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
 
 const matchPatterns = [
-  '崩壊スターレイル', '崩スタ', 'スターレイル', '(ho(n|u)kai:?\\s?)?star\\s?rail',
+  '崩壊スターレイル', '崩スタ', 'スターレイル',
   'Penacony', 'ピノコニー', '仙舟', '羅浮', 'ヤリーロ',
   '天才クラブ', 'スクリューガム', 'ポルカ(・)?カカム', 'セセルカル', 'イリアスサラス', '原始博士', '余清塗', '柏環',
   '星穹列車', '星核ハンター', '絶滅大君', '巡海レンジャー', '反物質レギオン', '博識学会', '建創者',
@@ -57,7 +57,6 @@ const matchPatterns = [
   'ヨウおじ',
 ];
 const excludePatterns = [
-  'MOOTS DE',
   '#shindanmaker',
   'shindanmaker',
   'kakuyomu',
