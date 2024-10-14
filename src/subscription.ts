@@ -6,7 +6,7 @@ import {
 import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
 
 const matchPatterns = [
-  '崩壊スターレイル', '崩スタ', 'スターレイル',
+  '崩壊スターレイル', '崩スタ', 'スターレイル', '(ho(n|u)kai:?\\s?)?star\\s?rail',
   'ピノコニー', '仙舟', '羅浮', 'ヤリーロ',
   '天才クラブ', 'スクリューガム', 'ポルカ(・)?カカム', 'セセルカル', 'イリアスサラス', '原始博士', '余清塗', '柏環',
   '星穹列車', '星核ハンター', '絶滅大君', '巡海レンジャー', '反物質レギオン', '博識学会', '建創者',
@@ -153,11 +153,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     let postsToCreate: Post[] = [];
 
     for (let i = 0, len = ops.posts.creates.length; i < len; i++) {
-      const create = ops.posts.creates[i]
-      const text = create.record.text
+      const create = ops.posts.creates[i];
+      const langs = create.record.langs;
+      const text = create.record.text;
       const hasReply = typeof create.record.reply !== 'undefined' || /^@/.test(text);
+      const isJapanese = langs && (langs.includes('ja') || langs.includes('ja-JP'));
 
-      if (regExp.test(text) && !excludeRegExp.test(text) && !hasReply) {
+      if (isJapanese && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
         postsToCreate.push({
           uri: create.uri,
           cid: create.cid,
