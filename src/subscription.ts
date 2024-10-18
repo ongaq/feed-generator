@@ -69,6 +69,8 @@ const excludePatterns = [
   '#shindanmaker',
   'shindanmaker',
   'kakuyomu',
+  'カメラ',
+  'fireworks',
   'カクヨム',
   'の霊砂',
   'マドリード|チェルシー',
@@ -87,7 +89,7 @@ const excludePatterns = [
   '#東方',
   'グラブル',
   '小鳥遊',
-  'ワンピース',
+  'ワンピ(ース)?',
   'ONE(\s)?PIECE',
   '蛍の光|ホタル(鑑賞|祭|見|観)|定点観測|ライブカメラ|ホタルの嫁入り',
   '海辺のカフカ',
@@ -158,8 +160,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       const text = create.record.text;
       const hasReply = typeof create.record.reply !== 'undefined' || /^@/.test(text);
       const isJapanese = langs && (langs.includes('ja') || langs.includes('ja-JP'));
+      // 中国語を除外する
+      const isChinese = langs && langs.some((lang) => lang.startsWith('zh'));
 
-      if (isJapanese && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
+      if (isJapanese && !isChinese && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
         postsToCreate.push({
           uri: create.uri,
           cid: create.cid,
