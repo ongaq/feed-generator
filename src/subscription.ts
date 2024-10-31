@@ -150,8 +150,8 @@ const excludePatterns = [
   'おもんな|だるい',
   '引退',
   '萎え|嫌い',
-  '(や|辞|)め(た|る)',
-  '(?<![ァ-ヶー・\\p{sc=Han}])(モチベ|ﾓﾁﾍﾞ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
+  '(や|辞|止)め(た|る|よ)',
+  '(?<![ァ-ヶー・\\p{sc=Han}])(ヘイト|モチベ|ﾓﾁﾍﾞ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'igu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'igs');
