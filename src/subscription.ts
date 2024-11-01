@@ -71,6 +71,7 @@ const excludePatterns = [
   '#shindanmaker',
   'shindanmaker',
   'kakuyomu',
+  'Топовые теги',
   'カメラ',
   'fireworks',
   'カクヨム',
