@@ -71,7 +71,7 @@ const excludePatterns = [
   '#shindanmaker',
   'shindanmaker',
   'kakuyomu',
-  'Топовые теги',
+  'Топовые',
   'カメラ',
   'fireworks',
   'カクヨム',
@@ -172,8 +172,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       const isJapanese = langs && (langs.includes('ja') || langs.includes('ja-JP'));
       // 中国語を除外する
       const isChinese = langs && langs.some((lang) => lang.startsWith('zh'));
+      // ロシア語を除外する
+      const isRussia = langs && langs.some((lang) => lang.startsWith('ru'));
 
-      if (isJapanese && !isChinese && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
+      if (isJapanese && !isChinese && !isRussia && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
         postsToCreate.push({
           uri: create.uri,
           cid: create.cid,
