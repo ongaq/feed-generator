@@ -161,8 +161,8 @@ const excludePatterns = [
   '(や|辞|止)め(た|る|よ)',
   '(?<![ァ-ヶー・\\p{sc=Han}])(ヘイト|モチベ|ﾓﾁﾍﾞ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
 ];
-const regExp = new RegExp(matchPatterns.join('|'), 'igu');
-const excludeRegExp = new RegExp(excludePatterns.join('|'), 'igs');
+const regExp = new RegExp(matchPatterns.join('|'), 'iu');
+const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -176,13 +176,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       const langs = create.record.langs;
       const text = create.record.text;
       const hasReply = typeof create.record.reply !== 'undefined' || /^@/.test(text);
-      const isJapanese = langs && (langs.includes('ja') || langs.includes('ja-JP'));
-      // 中国語を除外する
-      const isChinese = langs && langs.some((lang) => lang.startsWith('zh'));
-      // ロシア語を除外する
-      const isRussia = langs && langs.some((lang) => lang.startsWith('ru'));
+      const isValidLang = langs && langs.some((lang) =>
+        (lang === 'ja' || lang === 'ja-JP') &&
+        !lang.startsWith('zh') &&
+        !lang.startsWith('ru')
+      );
 
-      if (isJapanese && !isChinese && !isRussia && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
+      if (isValidLang && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
         postsToCreate.push({
           uri: create.uri,
           cid: create.cid,
