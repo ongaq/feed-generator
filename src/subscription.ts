@@ -136,7 +136,9 @@ const excludePatterns = [
   'ショックザハーツ',
   '#TikTok',
   '#TikTokライト',
+  '#Vtuber',
   'MOD',
+  'SorryWereClosed',
   'gamebanana\\.com',
   'geemato\\.com',
   'tiktok\\.com',
@@ -163,49 +165,57 @@ const excludePatterns = [
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'iu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
+const MAX_TEXT_LENGTH = 500;
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
-    if (!isCommit(evt)) return
-    const ops = await getOpsByType(evt)
-    const postsToDelete = ops.posts.deletes.map((del) => del.uri)
-    let postsToCreate: Post[] = [];
+    try {
+      if (!isCommit(evt)) return;
 
-    for (let i = 0, len = ops.posts.creates.length; i < len; i++) {
-      const create = ops.posts.creates[i];
-      const langs = create.record.langs;
-      const text = create.record.text;
-      const hasReply = typeof create.record.reply !== 'undefined' || /^@/.test(text);
-      const isValidLang = langs && langs.some((lang) =>
-        (lang === 'ja' || lang === 'ja-JP') &&
-        !lang.startsWith('zh') &&
-        !lang.startsWith('ru')
-      );
+      const ops = await getOpsByType(evt);
 
-      if (isValidLang && !hasReply && regExp.test(text) && !excludeRegExp.test(text)) {
-        postsToCreate.push({
+      // 削除処理
+      for (const del of ops.posts.deletes) {
+        await this.db
+          .deleteFrom('post')
+          .where('uri', '=', del.uri)
+          .execute();
+      }
+
+      // 作成処理
+      for (const create of ops.posts.creates) {
+        const langs = create.record.langs;
+        const text = create.record.text.slice(0, MAX_TEXT_LENGTH);
+        const hasReply = create.record.reply !== undefined || /^@/.test(text);
+        const isValidLang = langs && langs.some((lang) =>
+          (lang === 'ja' || lang === 'ja-JP') &&
+          !lang.startsWith('zh') &&
+          !lang.startsWith('ru')
+        );
+
+        if (!isValidLang || hasReply) continue;
+        if (excludeRegExp.test(text)) continue;
+        if (!regExp.test(text)) continue;
+
+        const post: Post = {
           uri: create.uri,
           cid: create.cid,
-          text: create.record.text,
-          replyParent: create.record?.reply?.parent.uri ?? null,
-          replyRoot: create.record?.reply?.root.uri ?? null,
+          text: text,
+          replyParent: create.record.reply?.parent.uri ?? null,
+          replyRoot: create.record.reply?.root.uri ?? null,
           indexedAt: new Date().toISOString(),
-        });
-      }
-    }
+        };
 
-    if (postsToDelete.length > 0) {
-      await this.db
-        .deleteFrom('post')
-        .where('uri', 'in', postsToDelete)
-        .execute()
-    }
-    if (postsToCreate.length > 0) {
-      await this.db
-        .insertInto('post')
-        .values(postsToCreate)
-        .onConflict((oc) => oc.doNothing())
-        .execute()
+        console.log('posted!:', post);
+
+        await this.db
+          .insertInto('post')
+          .values(post)
+          .onConflict((oc) => oc.doNothing())
+          .execute();
+      }
+    } catch (error) {
+      console.error('Error handling event:', error);
     }
   }
 }
