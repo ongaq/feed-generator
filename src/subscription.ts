@@ -212,8 +212,6 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           indexedAt: new Date().toISOString(),
         };
 
-        // console.log('posted!:', create);
-
         await this.db
           .insertInto('post')
           .values(post)

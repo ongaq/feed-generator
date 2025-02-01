@@ -23,6 +23,18 @@ export abstract class FirehoseSubscriptionBase {
       getParams: () => this.getCursor(),
       validate: (value: unknown) => {
         try {
+          // seq フィールドが BigInt 型の場合、Number 型に変換
+          if (typeof value === 'object' && value !== null && 'seq' in value) {
+            let seq = (value as any).seq;
+            
+            if (typeof seq === 'bigint') {
+              seq = Number(seq);
+            }
+            if (!Number.isInteger(seq)) {
+              throw new Error('seq must be an integer')
+            }
+            (value as any).seq = seq;
+          }
           return lexicons.assertValidXrpcMessage<RepoEvent>(
             ids.ComAtprotoSyncSubscribeRepos,
             value,
