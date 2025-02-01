@@ -166,6 +166,7 @@ const excludePatterns = [
   '引退',
   '萎え|嫌い',
   '(や|辞|止)め(た|る|よ)',
+  'キモ(い|過|す)',
   '(?<![ァ-ヶー・\\p{sc=Han}])(ヘイト|モチベ|ﾓﾁﾍﾞ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'iu');
