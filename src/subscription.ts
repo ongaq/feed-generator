@@ -107,7 +107,7 @@ const excludePatterns = [
   '海辺のカフカ',
   '少年カフカ',
   'カフカ(くん|没|の(虫|父親|日記|小説|変身))',
-  'カフカ(\s)?(日記|全集|短編|断片|論|風)',
+  'カフカ(\s)?(旅行|日記|全集|短編|断片|論|風)',
   'ぽんぽこ',
   'ゴキブリ',
   '魯迅',
@@ -144,6 +144,7 @@ const excludePatterns = [
   '#Vtuber',
   'MOD',
   'SorryWereClosed',
+  '(jp\\.)?mercari\\.com',
   'gamebanana\\.com',
   'geemato\\.com',
   'tiktok\\.com',
@@ -211,6 +212,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           replyRoot: create.record.reply?.root.uri ?? null,
           indexedAt: new Date().toISOString(),
         };
+
+        // console.log('posted!:', create);
 
         await this.db
           .insertInto('post')
