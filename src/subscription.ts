@@ -159,6 +159,7 @@ const excludePatterns = [
   'act\\.hoyoverse\\.com\\/sr\\/event',
   'dlsite\\.com',
   'dmm\\.co\\.jp',
+  'dmm\\.com',
   'rakuten\\.co\\.jp',
   // ネガティブな単語
   '論争',
