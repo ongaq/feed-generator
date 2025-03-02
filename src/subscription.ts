@@ -64,7 +64,7 @@ const matchPatterns = [
   'カカワーシャ', 'シヴォーン', 'エヴィキン(人|族)', '忘川守', 'オスワルド(・)?シュナイダー', 'ワー(ビ|ヴィ)ック',
   '(帰忘の)?流離人', 'Mr(\.)?レック',
   // 前後のカタカナと中黒除外、前方の漢字除外
-  '(?<![ァ-ヶー・\\p{sc=Han}])(スタレ|モゼ|ギャラガー|カフカ|ヘルタ|ロビン|アスター|フォフォ|ヴェルト|セーバル|アーラン|ホタル|トリビー|トリアン|トリノン|トリスビアス|キュレネ|アナイクス|ヒアンシー|モーディス|サフェル|キャストリス|ファイノン|セイレンス|ケリュドラ)(ママ)?(?![ァ-ヶー・])',
+  '(?<![ァ-ヶー・\\p{sc=Han}])(スタレ|モゼ|ギャラガー|カフカ|ヘルタ|ロビン|アスター|フォフォ|ヴェルト|セーバル|アーラン|ホタル|トリビー|トリアン|トリノン|トリスビアス|キュレネ|アナイクス|アナクサゴラス|ヒアンシー|モーディス|サフェル|キャストリス|ファイノン|セイレンス|ケリュドラ|カリュプソー)(ママ)?(?![ァ-ヶー・])',
   // 汎用的なキャラ名はハッシュタグ付きのみ
   '#(モゼ|姫子|トパーズ(＆カブ)?|フック|ペラ|ミーシャ|白露|カフカ|刃|サンポ|ヴェルト|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ルカ|ホタル|花火|黄泉|ジェイド)\\s',
   // 敬称
@@ -73,6 +73,9 @@ const matchPatterns = [
 ];
 const excludePatterns = [
   '#shindanmaker',
+  '#AI画像',
+  '#AIイラスト',
+  '#aiart',
   'shindanmaker',
   'kakuyomu',
   'Топовые',
@@ -181,15 +184,21 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
       const ops = await getOpsByType(evt);
 
-      // 削除処理
-      for (const del of ops.posts.deletes) {
+      // バッチ削除処理: 各削除のために個別のクエリを発行せず、
+      // 削除対象URIの配列を作成して一括削除する
+      const deletionUris = ops.posts.deletes.map((del) => del.uri);
+
+      if (deletionUris.length > 0) {
         await this.db
           .deleteFrom('post')
-          .where('uri', '=', del.uri)
+          .where('uri', 'in', deletionUris)
           .execute();
       }
 
-      // 作成処理
+      // バッチ作成処理: すべての作成対象投稿をまず配列にまとめてから、
+      // 一括挿入することでDBアクセス回数を減らす
+      const postsToInsert: Post[] = [];
+
       for (const create of ops.posts.creates) {
         const langs = create.record.langs;
         const text = create.record.text.slice(0, MAX_TEXT_LENGTH);
@@ -204,20 +213,20 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         if (excludeRegExp.test(text)) continue;
         if (!regExp.test(text)) continue;
 
-        const post: Post = {
+        postsToInsert.push({
           uri: create.uri,
           cid: create.cid,
           text: text,
           replyParent: create.record.reply?.parent.uri ?? null,
           replyRoot: create.record.reply?.root.uri ?? null,
           indexedAt: new Date().toISOString(),
-        };
+        });
+      }
 
-        // console.log('posted!:', create);
-
+      if (postsToInsert.length > 0) {
         await this.db
           .insertInto('post')
-          .values(post)
+          .values(postsToInsert)
           .onConflict((oc) => oc.doNothing())
           .execute();
       }
