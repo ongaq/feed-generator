@@ -145,6 +145,9 @@ const excludePatterns = [
   '#TikTok',
   '#TikTokライト',
   '#Vtuber',
+  '#投資',
+  '#投機',
+  '#FX',
   'MOD',
   'SorryWereClosed',
   '(jp\\.)?mercari\\.com',
@@ -161,6 +164,7 @@ const excludePatterns = [
   'dmm\\.co\\.jp',
   'dmm\\.com',
   'rakuten\\.co\\.jp',
+  'x\.gd',
   // ネガティブな単語
   '論争',
   '飽き(た|る)',
