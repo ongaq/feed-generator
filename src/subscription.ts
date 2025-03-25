@@ -76,6 +76,8 @@ const excludePatterns = [
   '#AI画像',
   '#AIイラスト',
   '#aiart',
+  '#pixai',
+  '#AI',
   'shindanmaker',
   'kakuyomu',
   'Топовые',
@@ -165,6 +167,7 @@ const excludePatterns = [
   'dmm\\.com',
   'rakuten\\.co\\.jp',
   'x\.gd',
+  'pixai\.art',
   // ネガティブな単語
   '論争',
   '飽き(た|る)',
