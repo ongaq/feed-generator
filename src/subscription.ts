@@ -82,6 +82,7 @@ const excludePatterns = [
   'shindanmaker',
   'kakuyomu',
   'Топовые',
+  'トレンド',
   'オープンチャット',
   'ポケモン',
   'カメラ',
