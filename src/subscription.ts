@@ -79,6 +79,7 @@ const excludePatterns = [
   '#aiart',
   '#pixai',
   '#AI',
+  'posted by',
   'shindanmaker',
   'kakuyomu',
   'Топовые',
