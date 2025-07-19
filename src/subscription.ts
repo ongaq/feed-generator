@@ -362,6 +362,11 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       // ハッシュタグをチェック
       const hasGameHashtag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル)/.test(text);
       
+      // 曖昧キーワードの出現数をカウント
+      const ambiguousMatches = ambiguousKeywords.filter(keyword => 
+        new RegExp(keyword, 'i').test(text)
+      ).length;
+      
       // 複合判定スコア計算
       let score = 0;
       
@@ -371,8 +376,14 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       
       if (hasGameContext) score += 0.4;              // ゲーム文脈あり
       if (hasGameHashtag) score += 0.3;              // ゲームハッシュタグあり
+      
+      // 複数の曖昧キーワードでスコアアップ
+      if (ambiguousMatches >= 2) score += 0.3;       // 2個以上で高スコア
+      else if (ambiguousMatches >= 1) score += 0.0;  // 1個は既にambiguousRegexで検出済み
 
-      console.log('score:', score, text);
+      if (score > 0) {
+        console.log(`score: ${score} (ambiguous: ${ambiguousMatches}) text: ${text}`);
+      }
       
       // しきい値判定（0.5以上で通す）
       return score >= 0.5;
