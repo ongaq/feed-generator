@@ -4,6 +4,7 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
+import { userHistory } from './util/user-history'
 
 const matchPatterns = [
   '崩壊スターレイル', '崩スタ', 'スターレイル', '(ho(n|u)kai:?\\s?)?star\\s?rail',
@@ -42,6 +43,7 @@ const matchPatterns = [
   '(キメラ|ライオン)組', 'アザラシ大作戦', 'ポポン', 'セファリア', 'ヒア丹', '丹ヒア', 'アグサフェ', 'サフェアグ', 'アグセファ', 'セファアグ',
   // v3.4キーワード
   'NeiKos496', 'PhiLia093', 'OreXis945', 'EpieiKeia216', 'SkeMma720', 'δ(-)?me13', 'カスライナ', '皇帝のセプター',
+  '風焔', '鉄墓', '星嘯', '鋳王', '光逝', '誅羅',
   // 音楽
   '銀河を独り揺蕩う', '傷(付|つ)く誰かの心を守る(こと|事)が(できた|出来た)なら', '翼の生えた希望',
   // 星神
@@ -191,6 +193,31 @@ const regExp = new RegExp(matchPatterns.join('|'), 'iu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
 const MAX_TEXT_LENGTH = 500;
 
+// 強力なゲーム関連キーワード（確実にゲーム投稿）
+const strongGameKeywords = [
+  '崩壊スターレイル', '崩スタ', 'スターレイル', 'star rail', 'HSR',
+  '光円錐', '模擬宇宙', '忘却の庭', '次元界分裂', '疑似花萼', '虚構叙事',
+  '歴戦余韻', '凝結虚影', '侵蝕トンネル', '混沌の記憶', '星穹列車'
+];
+
+// 曖昧なキーワード（他コンテンツと被る可能性）
+const ambiguousKeywords = [
+  'カフカ', 'ホタル', 'ロビン', 'アスター', '花火', '刃', 'ギャラガー', 'ヘルタ',
+  'モゼ', '姫子', 'トパーズ', 'ペラ', 'ミーシャ', '白露',
+  'サンポ', 'ヴェルト', '羅刹', '御空', 'ゼーレ', 'リンクス', 'クラーラ', 'ナターシャ', 'ルカ', '黄泉', 'ジェイド',
+];
+
+// ゲーム文脈を示すキーワード
+const gameContextKeywords = [
+  'ガチャ', '星5', '星4', '配布', 'イベント', 'バージョン', 'アップデート',
+  '天井', '確定', '実装', 'PU', 'ピックアップ', '復刻', '新キャラ',
+  '遺物', 'ビルド', 'パーティ', 'チーム編成', 'おすすめ', '攻略'
+];
+
+const strongGameRegex = new RegExp(strongGameKeywords.join('|'), 'i');
+const ambiguousRegex = new RegExp(ambiguousKeywords.join('|'), 'i');
+const gameContextRegex = new RegExp(gameContextKeywords.join('|'), 'i');
+
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
     try {
@@ -227,17 +254,36 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         if (excludeRegExp.test(text)) continue;
         if (!regExp.test(text)) continue;
 
-        postsToInsert.push({
-          uri: create.uri,
-          cid: create.cid,
-          text: text,
-          replyParent: create.record.reply?.parent.uri ?? null,
-          replyRoot: create.record.reply?.root.uri ?? null,
-          indexedAt: new Date().toISOString(),
-        });
+        // ユーザーDIDを取得
+        const userDid = create.uri.split('/')[2]; // at://did:xxx/... からDIDを抽出
+
+        // strongGameRegex チェック
+        const isStrongGamePost = strongGameRegex.test(text);
+        
+        // 高精度フィルタリング
+        const shouldInclude = await this.shouldIncludePost(text, userDid);
+        
+        if (shouldInclude) {
+          // ユーザー履歴を更新（ゲーム投稿として記録）
+          userHistory.updateUserPost(userDid, true, isStrongGamePost);
+
+          postsToInsert.push({
+            uri: create.uri,
+            cid: create.cid,
+            text: text,
+            replyParent: create.record.reply?.parent.uri ?? null,
+            replyRoot: create.record.reply?.root.uri ?? null,
+            indexedAt: new Date().toISOString(),
+          });
+        } else {
+          // フィルターで除外されたが、ユーザー履歴は更新（非ゲーム投稿として記録）
+          userHistory.updateUserPost(userDid, false, isStrongGamePost);
+        }
       }
 
       if (postsToInsert.length > 0) {
+        console.log(postsToInsert);
+
         await this.db
           .insertInto('post')
           .values(postsToInsert)
@@ -247,5 +293,50 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     } catch (error) {
       console.error('Error handling event:', error);
     }
+  }
+
+  /**
+   * 高精度フィルタリング：ユーザー履歴とコンテキストを考慮
+   */
+  private async shouldIncludePost(text: string, userDid: string): Promise<boolean> {
+    // 強力なゲームキーワードは無条件で通す
+    if (strongGameRegex.test(text)) {
+      return true;
+    }
+
+    // 曖昧なキーワードの場合は詳細判定
+    if (ambiguousRegex.test(text)) {
+      // 確実なゲーマーは問答無用で通す
+      if (userHistory.isConfirmedGamer(userDid)) {
+        return true;
+      }
+
+      // ユーザーの履歴を確認
+      const userConfidence = userHistory.getUserGameConfidence(userDid);
+      
+      // ゲーム文脈キーワードの存在をチェック
+      const hasGameContext = gameContextRegex.test(text);
+      
+      // ハッシュタグをチェック
+      const hasGameHashtag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル)/.test(text);
+      
+      // 複合判定スコア計算
+      let score = 0;
+      
+      if (userConfidence > 0.7) score += 0.6;        // 高信頼度ユーザー
+      else if (userConfidence > 0.4) score += 0.3;   // 中信頼度ユーザー
+      else if (userConfidence > 0.1) score += 0.1;   // 低信頼度ユーザー
+      
+      if (hasGameContext) score += 0.4;              // ゲーム文脈あり
+      if (hasGameHashtag) score += 0.3;              // ゲームハッシュタグあり
+
+      console.log('score:', score, text);
+      
+      // しきい値判定（0.5以上で通す）
+      return score >= 0.5;
+    }
+
+    // その他のキーワードは通す
+    return true;
   }
 }
