@@ -30,3 +30,33 @@ migrations['001'] = {
     await db.schema.dropTable('sub_state').execute()
   },
 }
+
+migrations['002'] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .createTable('user_stats')
+      .addColumn('userHash', 'varchar', (col) => col.primaryKey())
+      .addColumn('gameRatio', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('postCount', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('gamePlayer', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('lastUpdate', 'integer', (col) => col.notNull())
+      .addColumn('createdAt', 'integer', (col) => col.notNull())
+      .execute()
+    
+    // パフォーマンス用インデックス
+    await db.schema
+      .createIndex('idx_user_stats_last_update')
+      .on('user_stats')
+      .column('lastUpdate')
+      .execute()
+    
+    await db.schema
+      .createIndex('idx_user_stats_game_player')
+      .on('user_stats')
+      .column('gamePlayer')
+      .execute()
+  },
+  async down(db: Kysely<unknown>) {
+    await db.schema.dropTable('user_stats').execute()
+  },
+}

@@ -4,7 +4,7 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
-import { userHistory } from './util/user-history'
+import { getUserHistory } from './util/user-history'
 
 const matchPatterns = [
   '崩壊スターレイル', '崩スタ', 'スターレイル', '(ho(n|u)kai:?\\s?)?star\\s?rail',
@@ -265,7 +265,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         
         if (shouldInclude) {
           // ユーザー履歴を更新（ゲーム投稿として記録）
-          userHistory.updateUserPost(userDid, true, isStrongGamePost);
+          getUserHistory().updateUserPost(userDid, true, isStrongGamePost);
 
           postsToInsert.push({
             uri: create.uri,
@@ -277,7 +277,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           });
         } else {
           // フィルターで除外されたが、ユーザー履歴は更新（非ゲーム投稿として記録）
-          userHistory.updateUserPost(userDid, false, isStrongGamePost);
+          getUserHistory().updateUserPost(userDid, false, isStrongGamePost);
         }
       }
 
@@ -307,12 +307,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     // 曖昧なキーワードの場合は詳細判定
     if (ambiguousRegex.test(text)) {
       // 確実なゲーマーは問答無用で通す
-      if (userHistory.isConfirmedGamer(userDid)) {
+      if (await getUserHistory().isConfirmedGamer(userDid)) {
         return true;
       }
 
       // ユーザーの履歴を確認
-      const userConfidence = userHistory.getUserGameConfidence(userDid);
+      const userConfidence = await getUserHistory().getUserGameConfidence(userDid);
       
       // ゲーム文脈キーワードの存在をチェック
       const hasGameContext = gameContextRegex.test(text);

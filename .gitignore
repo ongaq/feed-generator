@@ -131,3 +131,9 @@ dist
 .pnp.*
 
 ./scripts/*
+
+# SQLite database files (keep data/ folder structure but ignore contents)
+data/
+*.db
+*.sqlite
+*.sqlite3
