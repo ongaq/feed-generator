@@ -9,7 +9,7 @@
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "deleteFeed": "ts-node scripts/deleteFeed.ts",
-    "start:dev": "NODE_ENV=development ts-node src/index.ts",
+    "dev": "NODE_ENV=development ts-node src/index.ts",
     "start": "NODE_ENV=production ts-node src/index.ts",
     "build": "tsc"
   },
