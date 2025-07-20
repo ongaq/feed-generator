@@ -35,5 +35,9 @@
   },
   "engines": {
     "node": "20.18.x"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11",
+    "fs-extra": "^11.3.0"
   }
 }

@@ -5,6 +5,7 @@ import {
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
 import { getUserHistory } from './util/user-history'
+import fs from 'fs-extra';
 
 // 強力なゲーム関連キーワード（確実にゲーム投稿）
 const strongGameKeywords = [
@@ -65,7 +66,7 @@ const strongGameKeywords = [
   '次元界オーナメント', '宇宙封印ステーション', '汎銀河商事会社', '天体階差機関', '盗賊公国タリア', '星々の競技場',
   '折れた竜骨', '蒼穹戦線グラモス', '顕世の出雲と高天の神国',
   // キャラ名（固有度の高いもの）
-  '桂乃芬', '鏡流', 'スヴァローグ', 'ル(ア|ァ)ン(・)?メ(ェ)?イ', '停雲', 'ブラックスワン',
+  '桂乃芬', '鏡流', 'スヴァローグ', 'ル(ア|ァ)ン(・)?メ(ェ)?イ', '停雲',
   '丹(恒|楓)', '(丹恒(・)?)?飲月', '(Dr\\.)?レイシオ', 'アベンチュリン', '符玄', '素裳', '寒鴉', '青雀', '乱破',
   '雪衣', 'カカリア', 'アルジェンティ', 'ブートヒル', '三月なのか',
   'カカワーシャ', 'シヴォーン', 'エヴィキン(人|族)', '忘川守', 'オスワルド(・)?シュナイダー', 'ワー(ビ|ヴィ)ック',
@@ -83,7 +84,7 @@ const destiny = [
 const ambiguousKeywords = [
   'スタレ',
   'ブローニャ', 'ヴェルト', '姫子', '銀狼', 'ゼーレ',
-  'ホタル', '刃', 'クラーラ', '花火', '黄泉',
+  'ホタル', '刃', 'クラーラ', '花火', '黄泉', 'ブラックスワン',
   '景元', '彦卿', '停雲', 'ジェパード', 'カフカ',
   'ウロボロス', 'テルミヌス', 'ヌース', 'クリフォト', '薬師',
   ...destiny, '純美',
@@ -286,8 +287,11 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
 
       if (postsToInsert.length > 0) {
-        console.log(postsToInsert);
+        if (process.env.NODE_ENV === 'development') {
+          const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
 
+          await fs.writeFile('./feed.log', `${JSON.stringify(postsToInsert, null, '  ')}\n${log}`);
+        }
         await this.db
           .insertInto('post')
           .values(postsToInsert)
@@ -362,8 +366,11 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
       // destinyのみ1-2個の場合はスコアアップなし（汎用的すぎる）
 
-      if (score >= 0.4) {
-        console.log('score:', score, `text: ${text}`);
+      if (process.env.NODE_ENV === 'development' && score >= 0.4) {
+        const line = `score: ${score}, text: ${text}`;
+        const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
+
+        await fs.writeFile('./feed.log', `${line}\n${log}`);
       }
       
       // しきい値判定（0.5以上で通す）
