@@ -50,7 +50,7 @@ const strongGameKeywords = [
   // 音楽
   '銀河を独り揺蕩う', '傷(付|つ)く誰かの心を守る(こと|事)が(できた|出来た)なら', '翼の生えた希望',
   // 星神
-  'ミュトゥス', 'アキヴィリ', 'ナヌーク', '浮黎', 'アッハ', 'イドリラ', 'タイズルス',
+  'ミュトゥス', 'アキヴィリ', 'ナヌーク', '浮黎', 'イドリラ', 'タイズルス',
   // 運命
   '存護', '巡狩',
   // 属性
@@ -87,10 +87,10 @@ const ambiguousKeywords = [
   '景元', '彦卿', '停雲', 'ジェパード', 'カフカ',
   'ウロボロス', 'テルミヌス', 'ヌース', 'クリフォト', '薬師',
   ...destiny, '純美',
-  'ミュトゥス',
+  'ミュトゥス', 'アッハ',
   '死水',
-  'ロビン', 'アスター', 'モゼ', 'トパーズ', 'ペラ', 'ミーシャ', '白露',
-  'サンポ', '羅刹', '御空', 'リンクス', 'ナターシャ', 'ルカ', 'ジェイド',
+  'ロビン', 'アスター', 'トパーズ', 'ミーシャ', '白露',
+  'サンポ', '羅刹', '御空', 'リンクス', 'ナターシャ', 'ジェイド',
 ];
 const matchPatterns = [...strongGameKeywords, ...ambiguousKeywords];
 
@@ -327,7 +327,17 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       // 曖昧キーワードの出現数をカウント
       const ambiguousMatches = ambiguousKeywords.filter(keyword => 
         new RegExp(keyword, 'i').test(text)
-      ).length;
+      );
+      
+      // destiny変数（汎用的な運命キーワード）のマッチ数をカウント
+      const destinyMatches = destiny.filter(keyword => 
+        new RegExp(keyword, 'i').test(text)
+      );
+      
+      // destiny以外のambiguousキーワードのマッチ数
+      const nonDestinyMatches = ambiguousMatches.filter(keyword => 
+        !destiny.includes(keyword)
+      );
       
       // 複合判定スコア計算
       let score = 0;
@@ -339,12 +349,21 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       if (hasGameContext) score += 0.4;              // ゲーム文脈あり
       if (hasGameHashtag) score += 0.3;              // ゲームハッシュタグあり
       
-      // 複数の曖昧キーワードでスコアアップ
-      if (ambiguousMatches >= 2) score += 0.3;       // 2個以上で高スコア
-      else if (ambiguousMatches >= 1) score += 0.0;  // 1個は既にambiguousRegexで検出済み
+      // スマートな複数キーワード判定
+      if (nonDestinyMatches.length >= 2) {
+        // destiny以外の曖昧キーワードが2個以上：確実にスコアアップ
+        score += 0.3;
+      } else if (nonDestinyMatches.length >= 1 && destinyMatches.length >= 1) {
+        // destiny以外1個 + destiny1個以上：組み合わせでスコアアップ
+        score += 0.3;
+      } else if (destinyMatches.length >= 3) {
+        // destinyのみだが3個以上：高確率でゲーム関連
+        score += 0.2;
+      }
+      // destinyのみ1-2個の場合はスコアアップなし（汎用的すぎる）
 
-      if (score > 0) {
-        console.log(`score: ${score} (ambiguous: ${ambiguousMatches}) text: ${text}`);
+      if (score >= 0.4) {
+        console.log('score:', score, `text: ${text}`);
       }
       
       // しきい値判定（0.5以上で通す）
