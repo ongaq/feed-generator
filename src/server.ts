@@ -73,6 +73,19 @@ export class FeedGenerator {
     await events.once(this.server, 'listening')
     return this.server
   }
+
+  async stop(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.server) {
+        this.server.close(() => {
+          console.log('HTTP server closed')
+          resolve()
+        })
+      } else {
+        resolve()
+      }
+    })
+  }
 }
 
 export default FeedGenerator

@@ -283,11 +283,33 @@ export class UserHistoryManager {
   }
 
   /**
+   * 強制同期：即座にすべてのデータをDBに保存
+   */
+  async forceSync(): Promise<void> {
+    try {
+      console.log('UserHistoryManager: Force syncing all data to database...');
+      
+      // すべてのホットキャッシュデータを同期キューに追加
+      for (const [hash, stats] of this.hotCache) {
+        this.syncQueue.set(hash, stats);
+      }
+      
+      // 即座に同期実行
+      await this.syncToDatabase();
+      
+      console.log(`UserHistoryManager: Force sync completed (${this.hotCache.size} users)`);
+    } catch (error) {
+      console.error('UserHistoryManager: Error during force sync:', error);
+      throw error; // 上位で処理できるようにエラーを再throw
+    }
+  }
+
+  /**
    * アプリ終了時の最終同期
    */
   async shutdown(): Promise<void> {
     console.log('UserHistoryManager: Final sync before shutdown...');
-    await this.syncToDatabase();
+    await this.forceSync();
   }
 }
 

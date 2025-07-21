@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import FeedGenerator from './server'
+import { getUserHistory } from './util/user-history'
 
 const run = async () => {
   dotenv.config()
@@ -24,6 +25,35 @@ const run = async () => {
   console.log(
     `🤖 running feed generator at http://${server.cfg.listenhost}:${server.cfg.port}`,
   )
+
+  // Graceful shutdown: Herokuデプロイ時のデータ保護
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`${signal} received, starting graceful shutdown...`)
+    
+    try {
+      // ユーザー履歴をDBに強制同期（最重要）
+      console.log('Syncing user history to database...')
+      await getUserHistory().forceSync()
+      console.log('User history sync completed')
+      
+      // サーバー停止
+      console.log('Stopping server...')
+      await server.stop()
+      console.log('Server stopped')
+      
+    } catch (error) {
+      console.error('Error during graceful shutdown:', error)
+    } finally {
+      console.log('Graceful shutdown completed')
+      process.exit(0)
+    }
+  }
+
+  // SIGTERM: Herokuデプロイ時に送信される (30秒の猶予あり)
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+  
+  // SIGINT: Ctrl+C等での手動停止時
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'))
 }
 
 const maybeStr = (val?: string) => {
