@@ -40,7 +40,10 @@ export abstract class FirehoseSubscriptionBase {
             value,
           )
         } catch (err) {
-          console.error('repo subscription skipped invalid message', err)
+          // 不正なメッセージは定期的に発生するため、詳細ログは開発時のみ
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('repo subscription skipped invalid message', err.message)
+          }
         }
       },
     })

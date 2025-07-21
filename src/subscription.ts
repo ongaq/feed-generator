@@ -4,17 +4,22 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, CreateOp } from './util/subscription'
+import { getUserHistory } from './util/user-history'
+import fs from 'fs-extra';
 
-const matchPatterns = [
+// 強力なゲーム関連キーワード（確実にゲーム投稿）
+const strongGameKeywords = [
+  // ゲーム固有のキーワード
   '崩壊スターレイル', '崩スタ', 'スターレイル', '(ho(n|u)kai:?\\s?)?star\\s?rail',
-  'ピノコニー', '仙舟', '羅浮', 'ヤリーロ',
+  'ピノコニー', '仙舟',
   '天才クラブ', 'スクリューガム', 'ポルカ(・)?カカム', 'セセルカル', 'イリアスサラス', '原始博士', '余清塗', '柏環',
   '星穹列車', '星核ハンター', '絶滅大君', '巡海レンジャー', '反物質レギオン', '博識学会', '建創者',
   '焼却人', '虚構歴史学者', '純美の騎士団', '仮面の愚者', '弔伶人', 'ガーデン\\s?オブ\\s?リコレクション',
-  'スターピースカンパニー', 'アナイアレイトギャング', 'ナナシビト', '次元プーマン', 'アキヴィリ', '星軌チケット',
+  'スターピースカンパニー', 'アナイアレイトギャング', 'ナナシビト', '次元プーマン', '星軌チケット',
   '魔陰の身', '雲騎軍', '持明族', '龍尊', '天舶司', '冥火大公', 'アフリート', 'ウーウーボ',
-  '光円錐', '模擬宇宙', '次元界分裂', '階差宇宙', '黄金と機械', '宇宙の蝗害', '凝結虚影', '歴戦余韻',
+  '模擬宇宙', '次元界分裂', '階差宇宙', '黄金と機械', '宇宙の蝗害', '凝結虚影', '歴戦余韻',
   '侵蝕トンネル', '疑似花萼', '虚構叙事', '忘却の庭', '混沌の記憶', '末日の幻影', '銀河打者', '超撃破',
+  '羅浮', 'ヤリーロ', '朱明', '光円錐',
   // v2.0キーワード
   '(?<![ァ-ヶー・•\\p{sc=Han}])(ホテル)?(・|•)?レバリー', 'ナイトメアテレビ局',
   // v2.1キーワード
@@ -22,7 +27,7 @@ const matchPatterns = [
   // v2.2キーワード
   'ハルモニア聖歌隊', 'ディエス(・)?ドミニ', 'クロックボーイ',
   // v2.3キーワード
-  '朱明', '椒丘', '江戸星', '海洋惑星|ルサカ', 'アゲートの世界|メルスタイン', 'ガラス光帯', 'パトレヴィニツィア',
+  '椒丘', '江戸星', '海洋惑星|ルサカ', 'アゲートの世界|メルスタイン', 'ガラス光帯', 'パトレヴィニツィア',
   '演武典礼', '飛霄', '曜青', '懐炎', '雲璃', '霊砂', '伝説の新人剣士', '焔輪八葉', 'オーナメント抽出', '(周期|通常)演算',
   '永遠の地|オンパロス', '小鳥マッチ',
   // v2.4キーワード
@@ -37,43 +42,59 @@ const matchPatterns = [
   'パーティー車両', '開拓者の部屋',
   // v2.8キーワード
   'マダム(・|•)?ヘルタ',
-  // v3.0キーワード？
+  // v3.0キーワード
   'アグライア', 'オクヘイマ', '遂願樹脂', '変数サイコロ', '黄金裔', 'ミュリオン', 'ニカドリー|ケファレ|ジョーリア|モネータ|オロニクス|タレンタム|ファジェイナ', '(紛争|世を背負う|大地|理性|浪漫|歳月|法|死|詭術|天空|海洋)(」)?のタイタン',
   '(キメラ|ライオン)組', 'アザラシ大作戦', 'ポポン', 'セファリア', 'ヒア丹', '丹ヒア', 'アグサフェ', 'サフェアグ', 'アグセファ', 'セファアグ',
   // v3.4キーワード
   'NeiKos496', 'PhiLia093', 'OreXis945', 'EpieiKeia216', 'SkeMma720', 'δ(-)?me13', 'カスライナ', '皇帝のセプター',
+  '風焔', '鉄墓', '星嘯', '鋳王', '光逝', '誅羅',
   // 音楽
   '銀河を独り揺蕩う', '傷(付|つ)く誰かの心を守る(こと|事)が(できた|出来た)なら', '翼の生えた希望',
   // 星神
-  'ミュトゥス', 'アキヴィリ', 'ナヌーク',
+  'ミュトゥス', 'アキヴィリ', 'ナヌーク', '浮黎', 'イドリラ', 'タイズルス',
   // 運命
-  '存護|巡狩',
-  '(壊滅|知恵|調和|虚無|豊穣)の運命',
+  '存護', '巡狩',
   // 属性
   '(虚数|量子)(パ|属性)',
   // 台詞
   '焦土作戦実行',
   // 遺物
-  'サルソット', '死水', 'ウェンワーク', 'ツガンニヤ',
+  'サルソット', 'ウェンワーク', 'ツガンニヤ',
   '流雲無痕の過客', '草の穂ガンマン', '純庭教会の聖騎士', '雪の密林の狩人', '成り上がりチャンピオン', '吹雪と対峙する兵士',
   '溶岩で鍛造する火匠', '星の如く輝く天才', '雷鳴轟くバンド', '昼夜の狭間を翔ける鷹', '流星の跡を追う怪盗', '荒地で盗みを働く廃土客',
   '宝命長存の蒔者', '仮想空間を漫遊するメッセンジャー', '灰燼を燃やし尽くす大公', '深い牢獄の囚人', '死水に潜る先駆者', '夢を弄ぶ時計屋',
   '次元界オーナメント', '宇宙封印ステーション', '汎銀河商事会社', '天体階差機関', '盗賊公国タリア', '星々の競技場',
   '折れた竜骨', '蒼穹戦線グラモス', '顕世の出雲と高天の神国',
-  // キャラ名
-  '桂乃芬', '彦卿', '鏡流', 'スヴァローグ', 'ル(ア|ァ)ン(・)?メ(ェ)?イ', '三月なのか', '停雲', 'ブラックスワン',
-  '丹(恒|楓)', '(丹恒(・)?)?飲月', '(Dr\\.)?レイシオ', 'アベンチュリン', '符玄', '素裳', '寒鴉', '景元', '銀狼', '青雀', '乱破',
-  '雪衣', 'ブローニャ', 'ジェパード', 'カカリア', 'アルジェンティ', 'ブートヒル',
+  // キャラ名（固有度の高いもの）
+  '桂乃芬', '鏡流', 'スヴァローグ', 'ル(ア|ァ)ン(・)?メ(ェ)?イ', '停雲',
+  '丹(恒|楓)', '(丹恒(・)?)?飲月', '(Dr\\.)?レイシオ', 'アベンチュリン', '符玄', '素裳', '寒鴉', '青雀', '乱破',
+  '雪衣', 'カカリア', 'アルジェンティ', 'ブートヒル', '三月なのか',
   'カカワーシャ', 'シヴォーン', 'エヴィキン(人|族)', '忘川守', 'オスワルド(・)?シュナイダー', 'ワー(ビ|ヴィ)ック',
   '(帰忘の)?流離人', 'Mr(\.)?レック',
   // 前後のカタカナと中黒除外、前方の漢字除外
-  '(?<![ァ-ヶー・\\p{sc=Han}])(スタレ|モゼ|ギャラガー|カフカ|ヘルタ|ロビン|アスター|フォフォ|ヴェルト|セーバル|アーラン|ホタル|トリビー|トリアン|トリノン|トリスビアス|キュレネ|アナイクス|アナクサゴラス|ヒアンシー|モーディス|サフェル|キャストリス|ファイノン|セイレンス|ケリュドラ|カリュプソー)(ママ)?(?![ァ-ヶー・])',
-  // 汎用的なキャラ名はハッシュタグ付きのみ
-  '#(モゼ|姫子|トパーズ(＆カブ)?|フック|ペラ|ミーシャ|白露|カフカ|刃|サンポ|ヴェルト|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ルカ|ホタル|花火|黄泉|ジェイド)\\s',
+  '(?<![ァ-ヶー・\\p{sc=Han}])(スタレ|ギャラガー|ヘルタ|アスター|フォフォ|セーバル|アーラン|トリビー|トリアン|トリノン|トリスビアス|キュレネ|アナイクス|アナクサゴラス|ヒアンシー|モーディス|サフェル|キャストリス|ファイノン|セイレンス|ケリュドラ|カリュプソー)(ママ)?(?![ァ-ヶー・])',
   // 敬称
-  '(?<![ァ-ヶー・•\\p{sc=Han}])(姫子|トパーズ(＆カブ)?|フック|白露|刃|サンポ|羅刹|御空|ゼーレ|リンクス|クラーラ|ナターシャ|ホタル|花火|黄泉)(ママ|さん|ちゃん|くん|様)',
+  '(?<![ァ-ヶー・•\\p{sc=Han}])(トパーズ(＆カブ)?|フック|白露|サンポ|羅刹|御空|リンクス|ナターシャ)(ママ|さん|ちゃん|くん|様)',
   'ヨウおじ',
 ];
+const destiny = [
+  '虚無', '均衡', '秩序', '繁殖', '開拓', '神秘', '貪慾', '愉悦', '記憶', '調和', '豊穣', '知恵', '壊滅',
+];
+// 曖昧なキーワード（他コンテンツと被る可能性）
+const ambiguousKeywords = [
+  'スタレ',
+  'ブローニャ', 'ヴェルト', '姫子', '銀狼', 'ゼーレ',
+  'ホタル', '刃', 'クラーラ', '花火', '黄泉', 'ブラックスワン',
+  '景元', '彦卿', '停雲', 'ジェパード', 'カフカ',
+  'ウロボロス', 'テルミヌス', 'ヌース', 'クリフォト', '薬師',
+  ...destiny, '純美',
+  'ミュトゥス', 'アッハ',
+  '死水',
+  'ロビン', 'アスター', 'トパーズ', 'ミーシャ', '白露',
+  'サンポ', '羅刹', '御空', 'リンクス', 'ナターシャ', 'ジェイド',
+];
+const matchPatterns = [...strongGameKeywords, ...ambiguousKeywords];
+
 const excludePatterns = [
   '#shindanmaker',
   '#AI画像',
@@ -191,6 +212,17 @@ const regExp = new RegExp(matchPatterns.join('|'), 'iu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
 const MAX_TEXT_LENGTH = 500;
 
+// ゲーム文脈を示すキーワード
+const gameContextKeywords = [
+  'ガチャ', '星5', '星4', '配布', 'イベント', 'バージョン', 'アップデート',
+  '天井', '確定', '実装', 'PU', 'ピックアップ', '復刻', '新キャラ',
+  '遺物', 'ビルド', 'パーティ', 'チーム編成', 'おすすめ', '攻略'
+];
+
+const strongGameRegex = new RegExp(strongGameKeywords.join('|'), 'i');
+const ambiguousRegex = new RegExp(ambiguousKeywords.join('|'), 'i');
+const gameContextRegex = new RegExp(gameContextKeywords.join('|'), 'i');
+
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
     try {
@@ -227,17 +259,39 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         if (excludeRegExp.test(text)) continue;
         if (!regExp.test(text)) continue;
 
-        postsToInsert.push({
-          uri: create.uri,
-          cid: create.cid,
-          text: text,
-          replyParent: create.record.reply?.parent.uri ?? null,
-          replyRoot: create.record.reply?.root.uri ?? null,
-          indexedAt: new Date().toISOString(),
-        });
+        // ユーザーDIDを取得
+        const userDid = create.uri.split('/')[2]; // at://did:xxx/... からDIDを抽出
+
+        // strongGameRegex チェック
+        const isStrongGamePost = strongGameRegex.test(text);
+        
+        // 高精度フィルタリング
+        const shouldInclude = await this.shouldIncludePost(text, userDid);
+        
+        if (shouldInclude) {
+          // ユーザー履歴を更新（ゲーム投稿として記録）
+          getUserHistory().updateUserPost(userDid, true, isStrongGamePost);
+
+          postsToInsert.push({
+            uri: create.uri,
+            cid: create.cid,
+            text: text,
+            replyParent: create.record.reply?.parent.uri ?? null,
+            replyRoot: create.record.reply?.root.uri ?? null,
+            indexedAt: new Date().toISOString(),
+          });
+        } else {
+          // フィルターで除外されたが、ユーザー履歴は更新（非ゲーム投稿として記録）
+          getUserHistory().updateUserPost(userDid, false, isStrongGamePost);
+        }
       }
 
       if (postsToInsert.length > 0) {
+        if (process.env.NODE_ENV === 'development') {
+          const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
+
+          await fs.writeFile('./feed.log', `${JSON.stringify(postsToInsert, null, '  ')}\n${log}`);
+        }
         await this.db
           .insertInto('post')
           .values(postsToInsert)
@@ -247,5 +301,85 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     } catch (error) {
       console.error('Error handling event:', error);
     }
+  }
+
+  /**
+   * 高精度フィルタリング：ユーザー履歴とコンテキストを考慮
+   */
+  private async shouldIncludePost(text: string, userDid: string): Promise<boolean> {
+    // 強力なゲームキーワードは無条件で通す
+    if (strongGameRegex.test(text)) {
+      return true;
+    }
+
+    // 曖昧なキーワードの場合は詳細判定
+    if (ambiguousRegex.test(text)) {
+      // 曖昧キーワードの出現数をカウント
+      const ambiguousMatches = ambiguousKeywords.filter(keyword => 
+        new RegExp(keyword, 'i').test(text)
+      );
+      // destiny変数（汎用的な運命キーワード）のマッチ数をカウント
+      const destinyMatches = destiny.filter(keyword => 
+        new RegExp(keyword, 'i').test(text)
+      );
+      // destiny以外のambiguousキーワードのマッチ数
+      const nonDestinyMatches = ambiguousMatches.filter(keyword => 
+        !destiny.includes(keyword)
+      );
+      // 確実なゲーマーでも、destiny単独1個の場合は詳細判定する
+      const isConfirmedGamer = await getUserHistory().isConfirmedGamer(userDid);
+
+      if (isConfirmedGamer) {
+        // destinyのみ1個の場合は詳細判定を行う
+        if (destinyMatches.length === 1 && nonDestinyMatches.length === 0) {
+          // 他の条件もチェックする（下記の詳細判定に続く）
+        } else {
+          // destiny以外の曖昧キーワードがある、または destiny が複数ある場合は問答無用で通す
+          return true;
+        }
+      }
+
+      // ユーザーの履歴を確認
+      const userConfidence = await getUserHistory().getUserGameConfidence(userDid);
+      // ゲーム文脈キーワードの存在をチェック
+      const hasGameContext = gameContextRegex.test(text);
+      // ハッシュタグをチェック
+      const hasGameHashtag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル)/.test(text);
+      // 複合判定スコア計算
+      let score = 0;
+      
+      if (userConfidence > 0.7) score += 0.6;        // 高信頼度ユーザー
+      else if (userConfidence > 0.4) score += 0.3;   // 中信頼度ユーザー
+      else if (userConfidence > 0.1) score += 0.1;   // 低信頼度ユーザー
+      
+      if (hasGameContext) score += 0.4;              // ゲーム文脈あり
+      if (hasGameHashtag) score += 0.3;              // ゲームハッシュタグあり
+      
+      // スマートな複数キーワード判定
+      if (nonDestinyMatches.length >= 2) {
+        // destiny以外の曖昧キーワードが2個以上：確実にスコアアップ
+        score += 0.3;
+      } else if (nonDestinyMatches.length >= 1 && destinyMatches.length >= 1) {
+        // destiny以外1個 + destiny1個以上：組み合わせでスコアアップ
+        score += 0.3;
+      } else if (destinyMatches.length >= 3) {
+        // destinyのみだが3個以上：高確率でゲーム関連
+        score += 0.2;
+      }
+      // destinyのみ1-2個の場合はスコアアップなし（汎用的すぎる）
+
+      if (process.env.NODE_ENV === 'development' && score >= 0.4) {
+        const line = `score: ${score}, destiny: ${destinyMatches.length}, nonDestiny: ${nonDestinyMatches.length}, text: ${text}`;
+        const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
+
+        await fs.writeFile('./feed.log', `${line}\n${log}`);
+      }
+      
+      // しきい値判定（0.5以上で通す）
+      return score >= 0.5;
+    }
+
+    // その他のキーワードは通す
+    return true;
   }
 }

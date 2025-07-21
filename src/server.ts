@@ -8,6 +8,7 @@ import describeGenerator from './methods/describe-generator'
 import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
+import { initUserHistory } from './util/user-history'
 import wellKnown from './well-known'
 
 export class FeedGenerator {
@@ -32,6 +33,10 @@ export class FeedGenerator {
   static create(cfg: Config) {
     const app = express()
     const db = createDb(cfg.sqliteLocation)
+    
+    // ユーザー履歴システムを初期化
+    initUserHistory(db)
+    
     const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
 
     const didCache = new MemoryCache()
@@ -67,6 +72,19 @@ export class FeedGenerator {
     this.server = this.app.listen(this.cfg.port, this.cfg.listenhost)
     await events.once(this.server, 'listening')
     return this.server
+  }
+
+  async stop(): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.server) {
+        this.server.close(() => {
+          console.log('HTTP server closed')
+          resolve()
+        })
+      } else {
+        resolve()
+      }
+    })
   }
 }
 
