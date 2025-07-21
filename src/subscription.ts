@@ -314,35 +314,37 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     // 曖昧なキーワードの場合は詳細判定
     if (ambiguousRegex.test(text)) {
-      // 確実なゲーマーは問答無用で通す
-      if (await getUserHistory().isConfirmedGamer(userDid)) {
-        return true;
-      }
-
-      // ユーザーの履歴を確認
-      const userConfidence = await getUserHistory().getUserGameConfidence(userDid);
-      
-      // ゲーム文脈キーワードの存在をチェック
-      const hasGameContext = gameContextRegex.test(text);
-      
-      // ハッシュタグをチェック
-      const hasGameHashtag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル)/.test(text);
-      
       // 曖昧キーワードの出現数をカウント
       const ambiguousMatches = ambiguousKeywords.filter(keyword => 
         new RegExp(keyword, 'i').test(text)
       );
-      
       // destiny変数（汎用的な運命キーワード）のマッチ数をカウント
       const destinyMatches = destiny.filter(keyword => 
         new RegExp(keyword, 'i').test(text)
       );
-      
       // destiny以外のambiguousキーワードのマッチ数
       const nonDestinyMatches = ambiguousMatches.filter(keyword => 
         !destiny.includes(keyword)
       );
-      
+      // 確実なゲーマーでも、destiny単独1個の場合は詳細判定する
+      const isConfirmedGamer = await getUserHistory().isConfirmedGamer(userDid);
+
+      if (isConfirmedGamer) {
+        // destinyのみ1個の場合は詳細判定を行う
+        if (destinyMatches.length === 1 && nonDestinyMatches.length === 0) {
+          // 他の条件もチェックする（下記の詳細判定に続く）
+        } else {
+          // destiny以外の曖昧キーワードがある、または destiny が複数ある場合は問答無用で通す
+          return true;
+        }
+      }
+
+      // ユーザーの履歴を確認
+      const userConfidence = await getUserHistory().getUserGameConfidence(userDid);
+      // ゲーム文脈キーワードの存在をチェック
+      const hasGameContext = gameContextRegex.test(text);
+      // ハッシュタグをチェック
+      const hasGameHashtag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル)/.test(text);
       // 複合判定スコア計算
       let score = 0;
       
@@ -367,7 +369,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       // destinyのみ1-2個の場合はスコアアップなし（汎用的すぎる）
 
       if (process.env.NODE_ENV === 'development' && score >= 0.4) {
-        const line = `score: ${score}, text: ${text}`;
+        const line = `score: ${score}, destiny: ${destinyMatches.length}, nonDestiny: ${nonDestinyMatches.length}, text: ${text}`;
         const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
 
         await fs.writeFile('./feed.log', `${line}\n${log}`);
