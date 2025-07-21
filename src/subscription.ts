@@ -288,9 +288,15 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
       if (postsToInsert.length > 0) {
         if (process.env.NODE_ENV === 'development') {
-          const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
-
-          await fs.writeFile('./feed.log', `${JSON.stringify(postsToInsert, null, '  ')}\n${log}`);
+          try {
+            let log = '';
+            if (await fs.pathExists('./feed.log')) {
+              log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
+            }
+            await fs.writeFile('./feed.log', `${JSON.stringify(postsToInsert, null, '  ')}\n${log}`);
+          } catch (error) {
+            console.warn('Failed to write feed.log:', error.message);
+          }
         }
         await this.db
           .insertInto('post')
@@ -369,10 +375,16 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       // destinyのみ1-2個の場合はスコアアップなし（汎用的すぎる）
 
       if (process.env.NODE_ENV === 'development' && score >= 0.4) {
-        const line = `score: ${score}, destiny: ${destinyMatches.length}, nonDestiny: ${nonDestinyMatches.length}, text: ${text}`;
-        const log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
-
-        await fs.writeFile('./feed.log', `${line}\n${log}`);
+        try {
+          const line = `score: ${score}, destiny: ${destinyMatches.length}, nonDestiny: ${nonDestinyMatches.length}, text: ${text}`;
+          let log = '';
+          if (await fs.pathExists('./feed.log')) {
+            log = await fs.readFile('./feed.log', { encoding: 'utf-8' });
+          }
+          await fs.writeFile('./feed.log', `${line}\n${log}`);
+        } catch (error) {
+          console.warn('Failed to write feed.log:', error.message);
+        }
       }
       
       // しきい値判定（0.5以上で通す）

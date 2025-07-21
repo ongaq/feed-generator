@@ -1,16 +1,33 @@
 import dotenv from 'dotenv'
 import FeedGenerator from './server'
 import { getUserHistory } from './util/user-history'
+import fs from 'fs'
+import path from 'path'
 
 const run = async () => {
   dotenv.config()
+  
+  // SQLiteファイル用ディレクトリを確実に作成
+  const sqliteLocation = maybeStr(process.env.FEEDGEN_SQLITE_LOCATION) ?? './data/feed.db';
+  const sqliteDir = path.dirname(sqliteLocation);
+  
+  try {
+    if (!fs.existsSync(sqliteDir)) {
+      fs.mkdirSync(sqliteDir, { recursive: true });
+      console.log(`Created directory: ${sqliteDir}`);
+    }
+  } catch (error) {
+    console.error(`Failed to create directory ${sqliteDir}:`, error);
+    process.exit(1);
+  }
+
   const hostname = maybeStr(process.env.FEEDGEN_HOSTNAME) ?? 'example.com'
   const serviceDid =
     maybeStr(process.env.FEEDGEN_SERVICE_DID) ?? `did:web:${hostname}`
   const server = FeedGenerator.create({
     port: maybeInt(process.env.PORT) ?? maybeInt(process.env.FEEDGEN_PORT) ?? 3000,
     listenhost: maybeStr(process.env.FEEDGEN_LISTENHOST) ?? 'localhost',
-    sqliteLocation: maybeStr(process.env.FEEDGEN_SQLITE_LOCATION) ?? './data/feed.db',
+    sqliteLocation: sqliteLocation,
     subscriptionEndpoint:
       maybeStr(process.env.FEEDGEN_SUBSCRIPTION_ENDPOINT) ??
       'wss://bsky.network',
