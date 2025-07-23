@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mkdir:*)",
       "WebFetch(domain:*)",
-      "Bash(heroku logs:*)"
+      "Bash(heroku logs:*)",
+      "Bash(heroku run:*)"
     ],
     "deny": []
   }

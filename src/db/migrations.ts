@@ -12,17 +12,25 @@ migrations['001'] = {
   async up(db: Kysely<unknown>) {
     await db.schema
       .createTable('post')
-      .addColumn('uri', 'varchar', (col) => col.primaryKey())
-      .addColumn('cid', 'varchar', (col) => col.notNull())
+      .addColumn('uri', 'varchar(255)', (col) => col.primaryKey())
+      .addColumn('cid', 'varchar(255)', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
-      .addColumn('replyParent', 'varchar')
-      .addColumn('replyRoot', 'varchar')
-      .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+      .addColumn('replyParent', 'varchar(255)')
+      .addColumn('replyRoot', 'varchar(255)')
+      .addColumn('indexedAt', 'varchar(255)', (col) => col.notNull())
       .execute()
+    
+    // PostgreSQL用のインデックス
+    await db.schema
+      .createIndex('idx_post_indexed_at')
+      .on('post')
+      .column('indexedAt')
+      .execute()
+      
     await db.schema
       .createTable('sub_state')
-      .addColumn('service', 'varchar', (col) => col.primaryKey())
-      .addColumn('cursor', 'integer', (col) => col.notNull())
+      .addColumn('service', 'varchar(255)', (col) => col.primaryKey())
+      .addColumn('cursor', 'bigint', (col) => col.notNull())
       .execute()
   },
   async down(db: Kysely<unknown>) {
@@ -35,12 +43,12 @@ migrations['002'] = {
   async up(db: Kysely<unknown>) {
     await db.schema
       .createTable('user_stats')
-      .addColumn('userHash', 'varchar', (col) => col.primaryKey())
-      .addColumn('gameRatio', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('userHash', 'varchar(32)', (col) => col.primaryKey())
+      .addColumn('gameRatio', 'smallint', (col) => col.notNull().defaultTo(0))
       .addColumn('postCount', 'integer', (col) => col.notNull().defaultTo(0))
-      .addColumn('gamePlayer', 'integer', (col) => col.notNull().defaultTo(0))
-      .addColumn('lastUpdate', 'integer', (col) => col.notNull())
-      .addColumn('createdAt', 'integer', (col) => col.notNull())
+      .addColumn('gamePlayer', 'smallint', (col) => col.notNull().defaultTo(0))
+      .addColumn('lastUpdate', 'bigint', (col) => col.notNull())
+      .addColumn('createdAt', 'bigint', (col) => col.notNull())
       .execute()
     
     // パフォーマンス用インデックス

@@ -17,6 +17,7 @@
 - **データベース**: SQLite3 (better-sqlite3)
 - **ORM**: Kysely
 - **プロトコル**: AT Protocol (@atproto)
+- **サーバー**: Heroku(Heroku CLIが使用可能)
 
 ## プロジェクト構造
 
