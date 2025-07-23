@@ -44,9 +44,9 @@ migrations['002'] = {
     await db.schema
       .createTable('user_stats')
       .addColumn('userHash', 'varchar(32)', (col) => col.primaryKey())
-      .addColumn('gameRatio', 'smallint', (col) => col.notNull().defaultTo(0))
+      .addColumn('gameRatio', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('postCount', 'integer', (col) => col.notNull().defaultTo(0))
-      .addColumn('gamePlayer', 'smallint', (col) => col.notNull().defaultTo(0))
+      .addColumn('gamePlayer', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('lastUpdate', 'bigint', (col) => col.notNull())
       .addColumn('createdAt', 'bigint', (col) => col.notNull())
       .execute()
