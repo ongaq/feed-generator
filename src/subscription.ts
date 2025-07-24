@@ -218,6 +218,7 @@ const gameContextKeywords = [
   '天井', '確定', '実装', 'PU', 'ピックアップ', '復刻', '新キャラ',
   '遺物', 'ビルド', 'パーティ', 'チーム編成', 'おすすめ', '攻略'
 ];
+const starrailHashTag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル|崩壊スターレイル)/;
 
 const strongGameRegex = new RegExp(strongGameKeywords.join('|'), 'i');
 const ambiguousRegex = new RegExp(ambiguousKeywords.join('|'), 'i');
@@ -344,13 +345,24 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           return true;
         }
       }
+      
+      // destiny単独1個の場合は、高信頼度ユーザーでも厳格判定
+      if (destinyMatches.length === 1 && nonDestinyMatches.length === 0) {
+        // ハッシュタグをチェック
+        const hasGameHashtag = starrailHashTag.test(text);
+        
+        if (!hasGameHashtag) {
+          return false; // ゲーム文脈またはハッシュタグが必要
+        }
+      }
 
       // ユーザーの履歴を確認
       const userConfidence = await getUserHistory().getUserGameConfidence(userDid);
       // ゲーム文脈キーワードの存在をチェック
       const hasGameContext = gameContextRegex.test(text);
       // ハッシュタグをチェック
-      const hasGameHashtag = /#(スタレ|崩スタ|HonkaiStarRail|HSR|スターレイル)/.test(text);
+      const hasGameHashtag = starrailHashTag.test(text);
+      
       // 複合判定スコア計算
       let score = 0;
       
