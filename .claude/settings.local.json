@@ -4,7 +4,9 @@
       "Bash(mkdir:*)",
       "WebFetch(domain:*)",
       "Bash(heroku logs:*)",
-      "Bash(heroku run:*)"
+      "Bash(heroku run:*)",
+      "WebFetch(domain:bsky.app)",
+      "Bash(node:*)"
     ],
     "deny": []
   }
