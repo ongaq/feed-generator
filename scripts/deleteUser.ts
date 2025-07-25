@@ -14,14 +14,62 @@ async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
     const response = await fetch(blueskyUrl);
     const html = await response.text();
     
-    // Extract DID from HTML (looking for did:plc: pattern)
-    const didMatch = html.match(/did:plc:[a-z0-9]+/);
-    if (!didMatch) {
-      throw new Error('❌ Could not extract DID from Bluesky URL');
+    // Try multiple patterns to extract DID
+    let did: string | null = null;
+    
+    // Pattern 1: Look for did:plc: in various formats
+    let didMatch = html.match(/did:plc:[a-z0-9]{24,}/);
+    if (didMatch) {
+      did = didMatch[0];
+    } else {
+      // Pattern 2: Look in script tags
+      const scriptMatch = html.match(/"did":"(did:plc:[a-z0-9]+)"/);
+      if (scriptMatch) {
+        did = scriptMatch[1];
+      } else {
+        // Pattern 3: Look in meta tags or other locations
+        const metaMatch = html.match(/content="(did:plc:[a-z0-9]+)"/);
+        if (metaMatch) {
+          did = metaMatch[1];
+        } else {
+          // Pattern 4: Look for any did:plc pattern with more relaxed matching
+          const relaxedMatch = html.match(/did:plc:[a-zA-Z0-9]{20,}/);
+          if (relaxedMatch) {
+            did = relaxedMatch[0];
+          }
+        }
+      }
     }
     
-    const did = didMatch[0];
-    console.log(`✅ Found DID: ${did}`);
+    if (!did) {
+      console.log('🔍 DID not found in HTML. Trying alternative method...');
+      
+      // Alternative: Extract username and use AT Protocol API
+      const usernameMatch = blueskyUrl.match(/profile\/([^\/]+)/);
+      if (usernameMatch) {
+        const username = usernameMatch[1];
+        console.log(`👤 Found username: ${username}`);
+        
+        try {
+          // Try to resolve DID via AT Protocol
+          const atResponse = await fetch(`https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${username}`);
+          const atData = await atResponse.json() as { did?: string };
+          
+          if (atData.did) {
+            did = atData.did;
+            console.log(`✅ Resolved DID via AT Protocol: ${did}`);
+          } else {
+            throw new Error('❌ Could not resolve DID via AT Protocol');
+          }
+        } catch (error) {
+          throw new Error(`❌ Could not extract DID from Bluesky URL. Username: ${username}, Error: ${error.message}`);
+        }
+      } else {
+        throw new Error('❌ Could not extract username from Bluesky URL');
+      }
+    } else {
+      console.log(`✅ Found DID: ${did}`);
+    }
     
     // Step 2: Calculate user hash
     const salt = process.env.USER_HASH_SALT || 'default_salt_2024';
@@ -40,7 +88,8 @@ async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
     try {
       const { stdout: selectResult } = await execAsync(selectCmd);
       
-      if (selectResult.includes('(0 行)') || selectResult.includes('(0 rows)')) {
+      // Check if no results (文字化け対応で(0で判定)
+      if (selectResult.includes('(0 ') || selectResult.includes('(0\t') || selectResult.includes('(0\r') || selectResult.includes('(0\n')) {
         console.log('ℹ️  User not found in database. Nothing to delete.');
         return;
       }
@@ -61,10 +110,12 @@ async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
       console.log('🔍 Confirming deletion...');
       const { stdout: confirmResult } = await execAsync(selectCmd);
       
-      if (confirmResult.includes('(0 行)') || confirmResult.includes('(0 rows)')) {
+      // Check deletion confirmation (文字化け対応で(0で判定)
+      if (confirmResult.includes('(0 ') || confirmResult.includes('(0\t') || confirmResult.includes('(0\r') || confirmResult.includes('(0\n')) {
         console.log('✅ Deletion confirmed. User no longer exists in database.');
       } else {
         console.log('⚠️  Warning: User might still exist in database.');
+        console.log('Debug - confirmResult:', JSON.stringify(confirmResult));
       }
       
     } catch (error) {
