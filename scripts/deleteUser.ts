@@ -1,8 +1,65 @@
 import crypto from 'crypto';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { execAsync, resolveDid, isEmptyResult } from './utils';
 
-const execAsync = promisify(exec);
+// ユーザー削除関数（DIDから直接削除）
+export async function deleteUserByDid(did: string): Promise<boolean> {
+  console.log('\n🔸 ===== ユーザー削除処理開始 =====');
+  console.log(`🆔 DID: ${did}`);
+  
+  // Step 1: Calculate user hash
+  const salt = process.env.USER_HASH_SALT || 'default_salt_2024';
+  const userHash = crypto.createHash('sha256')
+    .update(did + salt)
+    .digest('hex')
+    .slice(0, 16);
+  
+  console.log(`🔑 User hash: ${userHash}`);
+  
+  // Step 2: Check if user exists in database
+  console.log('🔍 Checking if user exists in database...');
+  
+  const selectCmd = `heroku pg:psql -a bluesky-feed-1 -c "SELECT * FROM user_stats WHERE \\"userHash\\" = '${userHash}';"`;
+  
+  try {
+    const { stdout: selectResult } = await execAsync(selectCmd);
+    
+    // Check if no results
+    if (isEmptyResult(selectResult)) {
+      console.log('ℹ️  User not found in database. Nothing to delete.');
+      return false;
+    }
+    
+    console.log('📊 User found in database:');
+    console.log(selectResult);
+    
+    // Step 3: Delete user
+    console.log('🗑️  Deleting user from database...');
+    
+    const deleteCmd = `heroku pg:psql -a bluesky-feed-1 -c "DELETE FROM user_stats WHERE \\"userHash\\" = '${userHash}';"`;
+    const { stdout: deleteResult } = await execAsync(deleteCmd);
+    
+    console.log('✅ User deleted successfully!');
+    console.log(deleteResult);
+    
+    // Step 4: Confirm deletion
+    console.log('🔍 Confirming deletion...');
+    const { stdout: confirmResult } = await execAsync(selectCmd);
+    
+    // Check deletion confirmation
+    if (isEmptyResult(confirmResult)) {
+      console.log('✅ User deletion confirmed.');
+      return true;
+    } else {
+      console.log('⚠️  Warning: User might still exist in database.');
+      console.log('Debug - confirmResult:', JSON.stringify(confirmResult));
+      return false;
+    }
+    
+  } catch (error) {
+    console.error(`❌ User deletion failed: ${error.message}`);
+    return false;
+  }
+}
 
 async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
   try {
@@ -52,15 +109,7 @@ async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
         
         try {
           // Try to resolve DID via AT Protocol
-          const atResponse = await fetch(`https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${username}`);
-          const atData = await atResponse.json() as { did?: string };
-          
-          if (atData.did) {
-            did = atData.did;
-            console.log(`✅ Resolved DID via AT Protocol: ${did}`);
-          } else {
-            throw new Error('❌ Could not resolve DID via AT Protocol');
-          }
+          did = await resolveDid(username);
         } catch (error) {
           throw new Error(`❌ Could not extract DID from Bluesky URL. Username: ${username}, Error: ${error.message}`);
         }
@@ -71,56 +120,8 @@ async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
       console.log(`✅ Found DID: ${did}`);
     }
     
-    // Step 2: Calculate user hash
-    const salt = process.env.USER_HASH_SALT || 'default_salt_2024';
-    const userHash = crypto.createHash('sha256')
-      .update(did + salt)
-      .digest('hex')
-      .slice(0, 16);
-    
-    console.log(`🔑 User hash: ${userHash}`);
-    
-    // Step 3: Check if user exists in database
-    console.log('🔍 Checking if user exists in database...');
-    
-    const selectCmd = `heroku pg:psql -a bluesky-feed-1 -c "SELECT * FROM user_stats WHERE \\"userHash\\" = '${userHash}';"`;
-    
-    try {
-      const { stdout: selectResult } = await execAsync(selectCmd);
-      
-      // Check if no results (文字化け対応で(0で判定)
-      if (selectResult.includes('(0 ') || selectResult.includes('(0\t') || selectResult.includes('(0\r') || selectResult.includes('(0\n')) {
-        console.log('ℹ️  User not found in database. Nothing to delete.');
-        return;
-      }
-      
-      console.log('📊 User found in database:');
-      console.log(selectResult);
-      
-      // Step 4: Delete user
-      console.log('🗑️  Deleting user from database...');
-      
-      const deleteCmd = `heroku pg:psql -a bluesky-feed-1 -c "DELETE FROM user_stats WHERE \\"userHash\\" = '${userHash}';"`;
-      const { stdout: deleteResult } = await execAsync(deleteCmd);
-      
-      console.log('✅ User deleted successfully!');
-      console.log(deleteResult);
-      
-      // Step 5: Confirm deletion
-      console.log('🔍 Confirming deletion...');
-      const { stdout: confirmResult } = await execAsync(selectCmd);
-      
-      // Check deletion confirmation (文字化け対応で(0で判定)
-      if (confirmResult.includes('(0 ') || confirmResult.includes('(0\t') || confirmResult.includes('(0\r') || confirmResult.includes('(0\n')) {
-        console.log('✅ Deletion confirmed. User no longer exists in database.');
-      } else {
-        console.log('⚠️  Warning: User might still exist in database.');
-        console.log('Debug - confirmResult:', JSON.stringify(confirmResult));
-      }
-      
-    } catch (error) {
-      throw new Error(`❌ Database operation failed: ${error.message}`);
-    }
+    // Step 2: Delete user using exported function
+    await deleteUserByDid(did);
     
   } catch (error) {
     console.error(`❌ Error: ${error.message}`);
