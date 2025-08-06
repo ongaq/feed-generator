@@ -129,18 +129,20 @@ async function deleteUserFromBlueskyUrl(blueskyUrl: string) {
   }
 }
 
-// Get URL from command line arguments
-const blueskyUrl = process.argv[2];
+// このファイルが直接実行された時だけ動くように（他のファイルから呼び出された時には動かないように）
+if (require.main === module) {
+  const blueskyUrl = process.argv[2];
 
-if (!blueskyUrl) {
-  console.error('❌ Usage: yarn deleteUser <bluesky-url>');
-  console.error('📝 Example: yarn deleteUser https://bsky.app/profile/username.bsky.social/post/xxxxx');
-  process.exit(1);
+  if (!blueskyUrl) {
+    console.error('❌ Usage: yarn deleteUser <bluesky-url>');
+    console.error('📝 Example: yarn deleteUser https://bsky.app/profile/username.bsky.social/post/xxxxx');
+    process.exit(1);
+  }
+
+  if (!blueskyUrl.includes('bsky.app')) {
+    console.error('❌ Please provide a valid Bluesky URL (must contain bsky.app)');
+    process.exit(1);
+  }
+
+  deleteUserFromBlueskyUrl(blueskyUrl);
 }
-
-if (!blueskyUrl.includes('bsky.app')) {
-  console.error('❌ Please provide a valid Bluesky URL (must contain bsky.app)');
-  process.exit(1);
-}
-
-deleteUserFromBlueskyUrl(blueskyUrl);

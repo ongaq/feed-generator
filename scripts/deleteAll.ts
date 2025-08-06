@@ -34,7 +34,7 @@ async function deleteAllFromBlueskyUrl(blueskyUrl: string) {
       // 1. POST削除
       const postDeleted = await deletePostByAtUri(atUri);
       
-      // 2. ユーザー削除
+      // 2. ユーザー削除（DIDから直接削除）
       const userDeleted = await deleteUserByDid(did);
       
       // 結果サマリー
