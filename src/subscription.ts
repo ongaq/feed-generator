@@ -252,16 +252,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       const postsToInsert: Post[] = [];
 
       for (const create of ops.posts.creates) {
-        const langs = create.record.langs;
         const text = create.record.text.slice(0, MAX_TEXT_LENGTH);
         const hasReply = create.record.reply !== undefined || /^@/.test(text);
-        const isValidLang = langs && langs.some((lang) =>
-          (lang === 'ja' || lang === 'ja-JP') &&
-          !lang.startsWith('zh') &&
-          !lang.startsWith('ru')
-        );
 
-        if (!isValidLang || hasReply) continue;
+        if (hasReply) continue;
         if (excludeRegExp.test(text)) continue;
         if (!regExp.test(text)) continue;
 

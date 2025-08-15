@@ -109,8 +109,20 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
       if (!recordBytes) continue
       const record = cborToLexRecord(recordBytes)
       const create = { uri, cid: op.cid.toString(), author: evt.repo }
+      
       if (collection === ids.AppBskyFeedPost && isPost(record)) {
-        opsByType.posts.creates.push({ record, ...create })
+        // 言語チェック: 日本語以外の投稿は事前にフィルタリング
+        const langs = record.langs;
+        const isValidLang = langs && langs.some((lang) =>
+          (lang === 'ja' || lang === 'ja-JP') &&
+          !lang.startsWith('zh') &&
+          !lang.startsWith('ru')
+        );
+        
+        // 日本語投稿のみを処理対象に含める
+        if (isValidLang) {
+          opsByType.posts.creates.push({ record, ...create })
+        }
       } else if (collection === ids.AppBskyFeedRepost && isRepost(record)) {
         opsByType.reposts.creates.push({ record, ...create })
       } else if (collection === ids.AppBskyFeedLike && isLike(record)) {
