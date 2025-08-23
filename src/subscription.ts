@@ -106,6 +106,8 @@ const excludePatterns = [
   '#aiart',
   '#pixai',
   '#AI',
+  '#原神',
+  '#GenshinImpact',
   'posted by',
   'shindanmaker',
   'kakuyomu',

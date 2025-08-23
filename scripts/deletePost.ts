@@ -9,6 +9,7 @@ export async function deletePostByAtUri(atUri: string): Promise<boolean> {
   console.log('🔍 Checking if post exists in database...');
   
   const selectCmd = `heroku pg:psql -a bluesky-feed-1 -c "SELECT uri, text FROM post WHERE uri = '${atUri}';"`;
+  // ここで処理が止まるようであれば `heroku logout` と `heroku login` を実行する
   
   try {
     const { stdout: selectResult } = await execAsync(selectCmd);
