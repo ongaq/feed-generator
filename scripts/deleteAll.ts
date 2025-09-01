@@ -1,4 +1,4 @@
-import { resolveDid } from './utils';
+import { resolveDid, atUriToBskyUrl } from './utils';
 import { deleteUserByDid } from './deleteUser';
 import { deletePostByAtUri } from './deletePost';
 
@@ -6,6 +6,13 @@ import { deletePostByAtUri } from './deletePost';
 async function deleteAllFromBlueskyUrl(blueskyUrl: string) {
   try {
     console.log(`🚀 統合削除処理開始: ${blueskyUrl}`);
+    
+    // AT-URIの場合は通常のBluesky URLに変換
+    if (blueskyUrl.startsWith('at://')) {
+      console.log('🔗 AT-URIを検出 - Bluesky URLに変換します');
+      blueskyUrl = await atUriToBskyUrl(blueskyUrl);
+      console.log(`✅ 変換完了: ${blueskyUrl}`);
+    }
     
     // URLタイプの判定
     const isPostUrl = blueskyUrl.includes('/post/');
@@ -91,15 +98,16 @@ async function deleteAllFromBlueskyUrl(blueskyUrl: string) {
 const blueskyUrl = process.argv[2];
 
 if (!blueskyUrl) {
-  console.error('❌ Usage: yarn deleteAll <bluesky-url>');
+  console.error('❌ Usage: yarn deleteAll <bluesky-url-or-at-uri>');
   console.error('📝 Examples:');
   console.error('   POST削除 + ユーザー削除: yarn deleteAll https://bsky.app/profile/username.bsky.social/post/3kh5j2l3k4m');
   console.error('   ユーザー削除のみ: yarn deleteAll https://bsky.app/profile/username.bsky.social');
+  console.error('   AT-URIから削除: yarn deleteAll at://did:plc:example/app.bsky.feed.post/3kh5j2l3k4m');
   process.exit(1);
 }
 
-if (!blueskyUrl.includes('bsky.app')) {
-  console.error('❌ Please provide a valid Bluesky URL (must contain bsky.app)');
+if (!blueskyUrl.includes('bsky.app') && !blueskyUrl.startsWith('at://')) {
+  console.error('❌ Please provide a valid Bluesky URL (must contain bsky.app) or AT-URI (starts with at://)');
   process.exit(1);
 }
 

@@ -6,7 +6,8 @@
       "Bash(heroku logs:*)",
       "Bash(heroku run:*)",
       "WebFetch(domain:bsky.app)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(heroku pg:psql:*)"
     ],
     "deny": []
   }

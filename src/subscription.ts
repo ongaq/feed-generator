@@ -197,6 +197,8 @@ const excludePatterns = [
   'rakuten\\.co\\.jp',
   'x\.gd',
   'pixai\.art',
+  // BANユーザー
+  'did:plc:tb2hbjuautbemyfe42gwtnwk',
   // ネガティブな単語
   '論争',
   '飽き(た|る)',
@@ -213,6 +215,11 @@ const excludePatterns = [
 const regExp = new RegExp(matchPatterns.join('|'), 'iu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
 const MAX_TEXT_LENGTH = 500;
+
+// BANユーザーリスト
+const bannedUserDids = new Set([
+  'did:plc:tb2hbjuautbemyfe42gwtnwk',
+]);
 
 // ゲーム文脈を示すキーワード
 const gameContextKeywords = [
@@ -258,6 +265,11 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
         // ユーザーDIDを取得
         const userDid = create.uri.split('/')[2]; // at://did:xxx/... からDIDを抽出
+
+        // BANユーザーチェック（早期リターン）
+        if (bannedUserDids.has(userDid)) {
+          continue;
+        }
 
         // strongGameRegex チェック
         const isStrongGamePost = strongGameRegex.test(text);

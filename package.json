@@ -8,10 +8,10 @@
   "license": "MIT",
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
-    "deleteFeed": "ts-node scripts/deleteFeed.ts",
-    "deleteUser": "ts-node scripts/deleteUser.ts",
-    "deletePost": "ts-node scripts/deletePost.ts",
-    "deleteAll": "ts-node scripts/deleteAll.ts",
+    "feed": "ts-node scripts/deleteFeed.ts",
+    "user": "ts-node scripts/deleteUser.ts",
+    "post": "ts-node scripts/deletePost.ts",
+    "all": "ts-node scripts/deleteAll.ts",
     "dev": "NODE_ENV=development ts-node src/index.ts",
     "start": "NODE_ENV=production ts-node src/index.ts",
     "build": "tsc"
