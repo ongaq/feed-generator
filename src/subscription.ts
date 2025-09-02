@@ -199,7 +199,9 @@ const excludePatterns = [
   'pixai\.art',
   // BANユーザー
   'did:plc:tb2hbjuautbemyfe42gwtnwk',
+  'did:plc:gcwmqj5jxc6ikl46omx67ab5',
   // ネガティブな単語
+  '死ね',
   '論争',
   '飽き(た|る)',
   'アンインストール',
@@ -219,6 +221,7 @@ const MAX_TEXT_LENGTH = 500;
 // BANユーザーリスト
 const bannedUserDids = new Set([
   'did:plc:tb2hbjuautbemyfe42gwtnwk',
+  'did:plc:gcwmqj5jxc6ikl46omx67ab5',
 ]);
 
 // ゲーム文脈を示すキーワード
