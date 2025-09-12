@@ -200,6 +200,7 @@ const excludePatterns = [
   // BANユーザー
   'did:plc:tb2hbjuautbemyfe42gwtnwk',
   'did:plc:gcwmqj5jxc6ikl46omx67ab5',
+  'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
   // ネガティブな単語
   '死ね',
   '論争',
@@ -222,6 +223,7 @@ const MAX_TEXT_LENGTH = 500;
 const bannedUserDids = new Set([
   'did:plc:tb2hbjuautbemyfe42gwtnwk',
   'did:plc:gcwmqj5jxc6ikl46omx67ab5',
+  'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
 ]);
 
 // ゲーム文脈を示すキーワード
