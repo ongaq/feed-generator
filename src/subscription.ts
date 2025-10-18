@@ -103,6 +103,7 @@ const excludePatterns = [
   '#GenshinImpact',
   'posted by',
   'shindanmaker',
+  'starrailpass',
   'kakuyomu',
   'Топовые',
   'トレンド',
