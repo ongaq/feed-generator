@@ -196,9 +196,11 @@ const excludePatterns = [
   'dmm\\.co\\.jp',
   'dmm\\.com',
   'rakuten\\.co\\.jp',
-  'x\.gd',
-  'pixai\.art',
+  'x\\.gd',
+  'pixai\\.art',
+  'yayafa\\.com',
   // BANユーザー
+  'did:plc:kkdpuqm6tvalztn4bwxp5vau',
   'did:plc:tb2hbjuautbemyfe42gwtnwk',
   'did:plc:gcwmqj5jxc6ikl46omx67ab5',
   'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
@@ -229,6 +231,7 @@ const bannedUserDids = new Set([
   'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
   'did:plc:xyp5es377rim5i3xivw37re6',
   'did:plc:jbfuxokbaruoq3svh5wm6t7v',
+  'did:plc:kkdpuqm6tvalztn4bwxp5vau',
 ]);
 
 // ゲーム文脈を示すキーワード
