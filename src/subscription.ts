@@ -209,6 +209,7 @@ const excludePatterns = [
   'did:plc:xyp5es377rim5i3xivw37re6',
   'did:plc:jbfuxokbaruoq3svh5wm6t7v',
   'did:plc:rjcmbdedpoijmdgekhqoocc4',
+  'did:plc:5ot42sdesgxlxkob2suold3l',
   // ネガティブな単語
   '死ね',
   '論争',
@@ -236,6 +237,7 @@ const bannedUserDids = new Set([
   'did:plc:jbfuxokbaruoq3svh5wm6t7v',
   'did:plc:kkdpuqm6tvalztn4bwxp5vau',
   'did:plc:rjcmbdedpoijmdgekhqoocc4',
+  'did:plc:5ot42sdesgxlxkob2suold3l',
 ]);
 
 // ゲーム文脈を示すキーワード
