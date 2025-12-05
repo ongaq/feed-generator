@@ -94,6 +94,18 @@ const ambiguousKeywords = [
 ];
 const matchPatterns = [...strongGameKeywords, ...ambiguousKeywords];
 
+const BAN_USER = [
+  'did:plc:tb2hbjuautbemyfe42gwtnwk',
+  'did:plc:gcwmqj5jxc6ikl46omx67ab5',
+  'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
+  'did:plc:xyp5es377rim5i3xivw37re6',
+  'did:plc:jbfuxokbaruoq3svh5wm6t7v',
+  'did:plc:kkdpuqm6tvalztn4bwxp5vau',
+  'did:plc:rjcmbdedpoijmdgekhqoocc4',
+  'did:plc:5ot42sdesgxlxkob2suold3l',
+  'did:plc:74d54mzvmwbh5upg7lsszdah',
+];
+
 const excludePatterns = [
   '#shindanmaker',
   '#AI画像',
@@ -197,21 +209,16 @@ const excludePatterns = [
   'dlsite\\.com',
   'dmm\\.co\\.jp',
   'dmm\\.com',
+  'al\\.fanza\\.co\\.jp',
   'rakuten\\.co\\.jp',
   'x\\.gd',
   'pixai\\.art',
   'yayafa\\.com',
   // BANユーザー
-  'did:plc:kkdpuqm6tvalztn4bwxp5vau',
-  'did:plc:tb2hbjuautbemyfe42gwtnwk',
-  'did:plc:gcwmqj5jxc6ikl46omx67ab5',
-  'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
-  'did:plc:xyp5es377rim5i3xivw37re6',
-  'did:plc:jbfuxokbaruoq3svh5wm6t7v',
-  'did:plc:rjcmbdedpoijmdgekhqoocc4',
-  'did:plc:5ot42sdesgxlxkob2suold3l',
+  ...BAN_USER,
   // ネガティブな単語
   '死ね',
+  '賛否',
   '論争',
   '飽き(た|る)',
   'アンインストール',
@@ -229,16 +236,7 @@ const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
 const MAX_TEXT_LENGTH = 500;
 
 // BANユーザーリスト
-const bannedUserDids = new Set([
-  'did:plc:tb2hbjuautbemyfe42gwtnwk',
-  'did:plc:gcwmqj5jxc6ikl46omx67ab5',
-  'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
-  'did:plc:xyp5es377rim5i3xivw37re6',
-  'did:plc:jbfuxokbaruoq3svh5wm6t7v',
-  'did:plc:kkdpuqm6tvalztn4bwxp5vau',
-  'did:plc:rjcmbdedpoijmdgekhqoocc4',
-  'did:plc:5ot42sdesgxlxkob2suold3l',
-]);
+const bannedUserDids = new Set(BAN_USER);
 
 // ゲーム文脈を示すキーワード
 const gameContextKeywords = [
