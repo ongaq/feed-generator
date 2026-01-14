@@ -231,7 +231,7 @@ const excludePatterns = [
   '萎え|嫌い',
   '(や|辞|止)め(た|る|よ)',
   'キモ(い|過|す)',
-  '(?<![ァ-ヶー・\\p{sc=Han}])(ヘイト|モチベ|ﾓﾁﾍﾞ|アホ|馬鹿|バカ|クソ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
+  '(?<![ァ-ヶー・\\p{sc=Han}])(パク(リ|り)|ヘイト|モチベ|ﾓﾁﾍﾞ|アホ|馬鹿|バカ|クソ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'iu');
 const excludeRegExp = new RegExp(excludePatterns.join('|'), 'is');
