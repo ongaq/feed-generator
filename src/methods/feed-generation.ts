@@ -10,16 +10,22 @@ export default function (server: Server, ctx: AppContext) {
     const feedUri = new AtUri(params.feed)
 
     // アクセスログ
-    const requesterDid = await validateAuth(
-      req,
-      ctx.cfg.serviceDid,
-      ctx.didResolver,
-    ).catch(() => 'anonymous');
-    
-    console.log(`Feed accessed: ${feedUri.rkey}, User: ${requesterDid}`)
+    try {
+      const requesterDid = await validateAuth(
+        req,
+        ctx.cfg.serviceDid,
+        ctx.didResolver,
+      ).catch(() => 'anonymous');
+      
+      if (requesterDid !== 'did:plc:ttn43d36woopfzzgw7dihvht') {
+        console.log(`Feed accessed: ${feedUri.rkey}, User: ${requesterDid}`);
+      }
+    } catch (e) {
+      console.error('Feed Access Log Error:', e);
+    }
 
     const algo = algos[feedUri.rkey]
-    
+
     if (
       feedUri.hostname !== ctx.cfg.publisherDid ||
       feedUri.collection !== 'app.bsky.feed.generator' ||
