@@ -8,7 +8,18 @@ import { AtUri } from '@atproto/syntax'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
     const feedUri = new AtUri(params.feed)
+
+    // アクセスログ
+    const requesterDid = await validateAuth(
+      req,
+      ctx.cfg.serviceDid,
+      ctx.didResolver,
+    ).catch(() => 'anonymous');
+    
+    console.log(`Feed accessed: ${feedUri.rkey}, User: ${requesterDid}`)
+
     const algo = algos[feedUri.rkey]
+    
     if (
       feedUri.hostname !== ctx.cfg.publisherDid ||
       feedUri.collection !== 'app.bsky.feed.generator' ||
