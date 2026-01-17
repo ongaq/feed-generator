@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.didResolver,
       ).catch(() => 'anonymous');
       
-      if (requesterDid !== 'did:plc:ttn43d36woopfzzgw7dihvht') {
+      if (requesterDid !== 'did:plc:ttn43d36woopfzzgw7dihvht' && requesterDid !== 'anonymous') {
         console.log(`Feed accessed: ${feedUri.rkey}, User: ${requesterDid}`);
       }
     } catch (e) {
