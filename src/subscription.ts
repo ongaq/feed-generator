@@ -97,6 +97,7 @@ const ambiguousKeywords = [
 const matchPatterns = [...strongGameKeywords, ...ambiguousKeywords];
 
 const BAN_USER = [
+  'did:plc:hcxsoxsfjjkko3husjluxvn4',
   'did:plc:tb2hbjuautbemyfe42gwtnwk',
   'did:plc:gcwmqj5jxc6ikl46omx67ab5',
   'did:plc:2o5odp5i4zqkb6qi5vpzoeha',
