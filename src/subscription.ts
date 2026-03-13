@@ -112,6 +112,7 @@ const BAN_USER = [
   'did:plc:74d54mzvmwbh5upg7lsszdah',
   'did:plc:gly2b6fafodv5pomn7u6fslv',
   'did:plc:tfrzchzdwpmiculfwj2s2rxa',
+  'did:plc:7g533izvondlkojvpge6pa5z',
 ];
 
 const excludePatterns = [
@@ -245,6 +246,8 @@ const excludePatterns = [
   '(や|辞|止)め(た|る|よ)',
   'キモ(い|過|す)',
   '気持ち悪',
+  '炎上',
+  '優遇(され|し(過|す))',
   '(?<![ァ-ヶー・\\p{sc=Han}])(パク(リ|り)|ヘイト|モチベ|ﾓﾁﾍﾞ|アホ|馬鹿|バカ|クソ|クソゲ|ｸｿｹﾞ|キショい|ボケ|ゴミ|カス)(?![ァ-ヶー・])',
 ];
 const regExp = new RegExp(matchPatterns.join('|'), 'iu');
