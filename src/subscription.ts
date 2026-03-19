@@ -114,6 +114,7 @@ const BAN_USER = [
   'did:plc:gly2b6fafodv5pomn7u6fslv',
   'did:plc:tfrzchzdwpmiculfwj2s2rxa',
   'did:plc:7g533izvondlkojvpge6pa5z',
+  'did:plc:2skttf32oaqdtzyw2jit4nim',
 ];
 
 const excludePatterns = [
@@ -126,6 +127,7 @@ const excludePatterns = [
   '#原神',
   '#楽蕾',
   '#GenshinImpact',
+  '#裏(アカ|垢)(女子)?',
   'posted by',
   'shindanmaker',
   'starrailpass',
