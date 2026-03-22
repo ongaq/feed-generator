@@ -115,6 +115,7 @@ const BAN_USER = [
   'did:plc:tfrzchzdwpmiculfwj2s2rxa',
   'did:plc:7g533izvondlkojvpge6pa5z',
   'did:plc:2skttf32oaqdtzyw2jit4nim',
+  'did:plc:76bkasyy75s7pomgw4vjnskj',
 ];
 
 const excludePatterns = [
