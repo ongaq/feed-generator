@@ -1,50 +1,49 @@
 import crypto from 'crypto';
-import { execAsync, resolveDid, isEmptyResult } from './utils';
+import { execSqlite, resolveDid, isEmptyResult } from './utils';
 
 // ユーザー削除関数（DIDから直接削除）
 export async function deleteUserByDid(did: string): Promise<boolean> {
   console.log('\n🔸 ===== ユーザー削除処理開始 =====');
   console.log(`🆔 DID: ${did}`);
-  
+
   // Step 1: Calculate user hash
   const salt = process.env.USER_HASH_SALT || 'default_salt_2024';
   const userHash = crypto.createHash('sha256')
     .update(did + salt)
     .digest('hex')
     .slice(0, 16);
-  
+
   console.log(`🔑 User hash: ${userHash}`);
-  
+
   // Step 2: Check if user exists in database
   console.log('🔍 Checking if user exists in database...');
-  
-  const selectCmd = `heroku pg:psql -a bluesky-feed-1 -c "SELECT * FROM user_stats WHERE \\"userHash\\" = '${userHash}';"`;
-  
+
+  const selectSql = `SELECT * FROM user_stats WHERE userHash = '${userHash}';`;
+
   try {
-    const { stdout: selectResult } = await execAsync(selectCmd);
-    
+    const selectResult = await execSqlite(selectSql);
+
     // Check if no results
     if (isEmptyResult(selectResult)) {
       console.log('ℹ️  User not found in database. Nothing to delete.');
       return false;
     }
-    
+
     console.log('📊 User found in database:');
     console.log(selectResult);
-    
+
     // Step 3: Delete user
     console.log('🗑️  Deleting user from database...');
-    
-    const deleteCmd = `heroku pg:psql -a bluesky-feed-1 -c "DELETE FROM user_stats WHERE \\"userHash\\" = '${userHash}';"`;
-    const { stdout: deleteResult } = await execAsync(deleteCmd);
-    
+
+    const deleteSql = `DELETE FROM user_stats WHERE userHash = '${userHash}';`;
+    await execSqlite(deleteSql);
+
     console.log('✅ User deleted successfully!');
-    console.log(deleteResult);
-    
+
     // Step 4: Confirm deletion
     console.log('🔍 Confirming deletion...');
-    const { stdout: confirmResult } = await execAsync(selectCmd);
-    
+    const confirmResult = await execSqlite(selectSql);
+
     // Check deletion confirmation
     if (isEmptyResult(confirmResult)) {
       console.log('✅ User deletion confirmed.');
@@ -54,9 +53,10 @@ export async function deleteUserByDid(did: string): Promise<boolean> {
       console.log('Debug - confirmResult:', JSON.stringify(confirmResult));
       return false;
     }
-    
+
   } catch (error) {
-    console.error(`❌ User deletion failed: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ User deletion failed: ${message}`);
     return false;
   }
 }

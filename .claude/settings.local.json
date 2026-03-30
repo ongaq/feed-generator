@@ -2,12 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(mkdir:*)",
-      "WebFetch(domain:*)",
+      "Bash(node:*)",
       "Bash(heroku logs:*)",
       "Bash(heroku run:*)",
-      "WebFetch(domain:bsky.app)",
-      "Bash(node:*)",
-      "Bash(heroku pg:psql:*)"
+      "Bash(heroku pg:psql:*)",
+      "Bash(pnpm build:content:*)",
+      "WebSearch",
+      "WebFetch"
     ],
     "deny": []
   }

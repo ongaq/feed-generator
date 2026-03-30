@@ -18,11 +18,14 @@ export const createDb = (location: string): Database => {
     })
   }
   
-  // SQLite（開発環境用）
+  // SQLite（本番環境で使用）
   console.log('Using SQLite database:', location)
+  const sqliteDb = new SqliteDb(location)
+  // WALモード: 読み取りと書き込みの同時実行を可能にする
+  sqliteDb.pragma('journal_mode = WAL')
   return new Kysely<DatabaseSchema>({
     dialect: new SqliteDialect({
-      database: new SqliteDb(location),
+      database: sqliteDb,
     }),
   })
 }

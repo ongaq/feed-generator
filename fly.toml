@@ -1,0 +1,40 @@
+# fly.toml app configuration file generated for feed-generator-old-smoke-7764 on 2026-03-25T22:26:40+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'feed-generator-old-smoke-7764'
+primary_region = 'nrt'
+
+[build]
+
+[[mounts]]
+  source = 'data'
+  destination = '/data'
+  auto_extend_size_threshold = 80
+  auto_extend_size_increment = '1GB'
+  auto_extend_size_limit = '10GB'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[env]
+  NODE_ENV = "production"
+  FEEDGEN_SQLITE_LOCATION = "/data/feed.db"
+  FEEDGEN_LISTENHOST = "0.0.0.0"
+  FEEDGEN_PORT = "3000"
+  FEEDGEN_HOSTNAME = "starrail-feed.yukimis.blue"
+  FEEDGEN_PUBLISHER_DID = "did:plc:ttn43d36woopfzzgw7dihvht"
+  FEEDGEN_SUBSCRIPTION_ENDPOINT = "wss://bsky.network"
+  FEEDGEN_SUBSCRIPTION_RECONNECT_DELAY = "3000"
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024

@@ -12,6 +12,7 @@
     "user": "ts-node scripts/deleteUser.ts",
     "post": "ts-node scripts/deletePost.ts",
     "all": "ts-node scripts/deleteAll.ts",
+    "pv": "ts-node scripts/analytics.ts",
     "dev": "NODE_ENV=development ts-node src/index.ts",
     "start": "NODE_ENV=production ts-node src/index.ts",
     "build": "tsc"
@@ -43,5 +44,9 @@
   },
   "engines": {
     "node": "20.18.x"
-  }
+  },
+  "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10"
+  },
+  "packageManager": "yarn@4.1.0"
 }

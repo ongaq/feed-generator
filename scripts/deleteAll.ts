@@ -89,7 +89,8 @@ async function deleteAllFromBlueskyUrl(blueskyUrl: string) {
     }
     
   } catch (error) {
-    console.error(`❌ Error: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ Error: ${message}`);
     process.exit(1);
   }
 }

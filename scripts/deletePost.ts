@@ -1,41 +1,39 @@
-import { execAsync, resolveDid, isEmptyResult } from './utils';
+import { execSqlite, resolveDid, isEmptyResult } from './utils';
 
 // POST削除関数（AT-URIから直接削除）
 export async function deletePostByAtUri(atUri: string): Promise<boolean> {
   console.log('\n🔸 ===== POST削除処理開始 =====');
   console.log(`🔗 AT-URI: ${atUri}`);
-  
+
   // Step 1: Check if post exists in database
   console.log('🔍 Checking if post exists in database...');
-  
-  const selectCmd = `heroku pg:psql -a bluesky-feed-1 -c "SELECT uri, text FROM post WHERE uri = '${atUri}';"`;
-  // ここで処理が止まるようであれば `heroku logout` と `heroku login` を実行する
-  
+
+  const selectSql = `SELECT uri, text FROM post WHERE uri = '${atUri}';`;
+
   try {
-    const { stdout: selectResult } = await execAsync(selectCmd);
-    
+    const selectResult = await execSqlite(selectSql);
+
     // Check if no results
     if (isEmptyResult(selectResult)) {
       console.log('ℹ️  Post not found in feed database. Nothing to delete.');
       return false;
     }
-    
+
     console.log('📊 Post found in database:');
     console.log(selectResult);
-    
+
     // Step 2: Delete post
     console.log('🗑️  Deleting post from database...');
-    
-    const deleteCmd = `heroku pg:psql -a bluesky-feed-1 -c "DELETE FROM post WHERE uri = '${atUri}';"`;
-    const { stdout: deleteResult } = await execAsync(deleteCmd);
-    
+
+    const deleteSql = `DELETE FROM post WHERE uri = '${atUri}';`;
+    await execSqlite(deleteSql);
+
     console.log('✅ Post deleted successfully!');
-    console.log(deleteResult);
-    
+
     // Step 3: Confirm deletion
     console.log('🔍 Confirming deletion...');
-    const { stdout: confirmResult } = await execAsync(selectCmd);
-    
+    const confirmResult = await execSqlite(selectSql);
+
     // Check deletion confirmation
     if (isEmptyResult(confirmResult)) {
       console.log('✅ Post deletion confirmed.');
@@ -45,9 +43,10 @@ export async function deletePostByAtUri(atUri: string): Promise<boolean> {
       console.log('Debug - confirmResult:', JSON.stringify(confirmResult));
       return false;
     }
-    
+
   } catch (error) {
-    console.error(`❌ Post deletion failed: ${error.message}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`❌ Post deletion failed: ${message}`);
     return false;
   }
 }
@@ -79,9 +78,10 @@ async function deletePostFromBlueskyUrl(blueskyUrl: string) {
     
     // Step 4: Delete post using exported function
     await deletePostByAtUri(atUri);
-    
   } catch (error) {
-    console.error(`❌ Error: ${error.message}`);
+    if (error instanceof Error) {
+      console.error(`❌ Error: ${error.message}`);
+    }
     process.exit(1);
   }
 }
