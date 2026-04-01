@@ -43,6 +43,36 @@ const run = async () => {
     `🤖 running feed generator at http://${server.cfg.listenhost}:${server.cfg.port}`,
   )
 
+  // メモリ監視（5分ごと）
+  const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000;
+  setInterval(() => {
+    const memUsage = process.memoryUsage();
+    const userHistoryStats = getUserHistory().getStats();
+
+    console.log(`[Memory] heap: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB / ${Math.round(memUsage.heapTotal / 1024 / 1024)}MB, ` +
+      `rss: ${Math.round(memUsage.rss / 1024 / 1024)}MB, ` +
+      `userHistory: cache=${userHistoryStats.hotCacheUsers}, queue=${userHistoryStats.syncQueueUsers} (${userHistoryStats.queueUtilization}%), ` +
+      `syncFails=${userHistoryStats.syncFailCount}`);
+
+    // メモリ使用量が高い場合は警告
+    const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
+    if (heapUsedMB > 800) {
+      const message = `[Memory Warning] High memory usage: ${Math.round(heapUsedMB)}MB - consider investigating`;
+      console.warn(message);
+
+      // Discord Webhookに通知
+      fetch('https://discord.com/api/webhooks/1488863692542972154/2OJbpXqjmIeBZYtt_IOPZIESirjAXBuQ8x5v0RUezfM6DdEDbT5uvl2SkJVYfPGeD37A', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: `⚠️ **Feed Generator Memory Alert**\n${message}\n` +
+            `heap: ${Math.round(heapUsedMB)}MB, rss: ${Math.round(memUsage.rss / 1024 / 1024)}MB\n` +
+            `userHistory: cache=${userHistoryStats.hotCacheUsers}, queue=${userHistoryStats.syncQueueUsers} (${userHistoryStats.queueUtilization}%)`
+        })
+      }).catch(err => console.error('Discord webhook failed:', err.message));
+    }
+  }, MEMORY_CHECK_INTERVAL);
+
   // Graceful shutdown: Herokuデプロイ時のデータ保護
   const gracefulShutdown = async (signal: string) => {
     console.log(`${signal} received, starting graceful shutdown...`)

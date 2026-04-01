@@ -12,13 +12,15 @@ interface UserStats {
 export class UserHistoryManager {
   private hotCache = new Map<string, UserStats>();    // ホットキャッシュ（頻繁アクセス）
   private readonly HOT_CACHE_SIZE = 5000;             // 5K users ≈ 140KB
+  private readonly SYNC_QUEUE_MAX_SIZE = 10000;       // syncQueueの上限（メモリリーク防止）
   private readonly SALT = process.env.USER_HASH_SALT || 'default_salt_2024';
   private db: Database;
-  
+
   // DB同期用
   private syncQueue = new Map<string, UserStats>();   // 同期待ちデータ
   private lastSync = Date.now();
   private readonly SYNC_INTERVAL = 30000;             // 30秒ごとにDB同期
+  private syncFailCount = 0;                          // 連続同期失敗カウント
 
   constructor(database: Database) {
     this.db = database;
@@ -86,8 +88,13 @@ export class UserHistoryManager {
       this.hotCache.set(hash, existing);
     }
 
-    // 同期キューに追加
-    this.syncQueue.set(hash, { ...existing });
+    // 同期キューに追加（サイズ制限チェック）
+    if (this.syncQueue.size < this.SYNC_QUEUE_MAX_SIZE) {
+      this.syncQueue.set(hash, { ...existing });
+    } else if (this.syncQueue.size % 1000 === 0) {
+      // 上限に達している場合は警告（頻繁に出力しないよう制限）
+      console.warn(`syncQueue at max capacity (${this.SYNC_QUEUE_MAX_SIZE}), dropping updates`);
+    }
 
     // ホットキャッシュのサイズ管理
     if (this.hotCache.size > this.HOT_CACHE_SIZE) {
@@ -193,23 +200,42 @@ export class UserHistoryManager {
   }
 
   /**
-   * ホットキャッシュのサイズ削減（LRU）
+   * ホットキャッシュのサイズ削減（LRU・メモリ効率化版）
+   * 完全な配列コピーを避け、削除対象のみを収集
    */
   private pruneHotCache(): void {
-    const entries = Array.from(this.hotCache.entries());
-    
-    // 古い順でソート
-    entries.sort((a, b) => a[1].t - b[1].t);
-    
-    // 古い25%を削除
-    const deleteCount = Math.floor(entries.length * 0.25);
-    for (let i = 0; i < deleteCount; i++) {
-      this.hotCache.delete(entries[i][0]);
+    const deleteCount = Math.floor(this.hotCache.size * 0.25);
+    if (deleteCount === 0) return;
+
+    // 削除対象のタイムスタンプ閾値を計算
+    // まず最小ヒープ的に古いエントリを探す
+    const candidates: Array<{ key: string; t: number }> = [];
+
+    for (const [key, stats] of this.hotCache) {
+      if (candidates.length < deleteCount) {
+        candidates.push({ key, t: stats.t });
+        // 挿入ソート（小さい配列なので効率的）
+        for (let i = candidates.length - 1; i > 0 && candidates[i].t > candidates[i - 1].t; i--) {
+          [candidates[i], candidates[i - 1]] = [candidates[i - 1], candidates[i]];
+        }
+      } else if (stats.t < candidates[0].t) {
+        // 現在の最大より古い場合、最大を置き換え
+        candidates[0] = { key, t: stats.t };
+        // 再度ソート
+        for (let i = 0; i < candidates.length - 1 && candidates[i].t > candidates[i + 1].t; i++) {
+          [candidates[i], candidates[i + 1]] = [candidates[i + 1], candidates[i]];
+        }
+      }
+    }
+
+    // 古いエントリを削除
+    for (const { key } of candidates) {
+      this.hotCache.delete(key);
     }
   }
 
   /**
-   * 同期キューのデータをDBに書き込み
+   * 同期キューのデータをDBに書き込み（バッチ処理最適化）
    */
   private async syncToDatabase(): Promise<void> {
     if (this.syncQueue.size === 0) return;
@@ -218,43 +244,62 @@ export class UserHistoryManager {
     const toSync = Array.from(this.syncQueue.entries());
     this.syncQueue.clear();
 
+    // バッチサイズ（SQLiteの変数制限を考慮）
+    const BATCH_SIZE = 100;
+
     try {
       // バッチ処理でDB更新
-      for (const [hash, stats] of toSync) {
-        await this.db
-          .insertInto('user_stats')
-          .values({
-            userHash: hash,
-            gameRatio: stats.r,
-            postCount: stats.c,
-            gamePlayer: stats.g,
-            lastUpdate: stats.t,
-            createdAt: now
-          })
-          .onConflict((oc) => oc
-            .column('userHash')
-            .doUpdateSet({
-              gameRatio: stats.r,
-              postCount: stats.c,
-              gamePlayer: stats.g,
-              lastUpdate: stats.t
-            })
-          )
-          .execute();
+      for (let i = 0; i < toSync.length; i += BATCH_SIZE) {
+        const batch = toSync.slice(i, i + BATCH_SIZE);
+        const values = batch.map(([hash, stats]) => ({
+          userHash: hash,
+          gameRatio: stats.r,
+          postCount: stats.c,
+          gamePlayer: stats.g,
+          lastUpdate: stats.t,
+          createdAt: now
+        }));
+
+        // Kysely 0.22のバッチupsertは複数の値に対して個別に実行が必要
+        for (const value of values) {
+          await this.db
+            .insertInto('user_stats')
+            .values(value)
+            .onConflict((oc) => oc
+              .column('userHash')
+              .doUpdateSet({
+                gameRatio: value.gameRatio,
+                postCount: value.postCount,
+                gamePlayer: value.gamePlayer,
+                lastUpdate: value.lastUpdate
+              })
+            )
+            .execute();
+        }
       }
 
       this.lastSync = now;
-      
+      this.syncFailCount = 0; // 成功時にリセット
+
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Synced ${toSync.length} user stats to DB`);
+        console.log(`Synced ${toSync.length} user stats to DB in ${Math.ceil(toSync.length / BATCH_SIZE)} batches`);
       }
     } catch (error) {
-      console.error('Error syncing user stats to DB:', error);
-      
-      // エラー時は同期キューに戻す
-      toSync.forEach(([hash, stats]) => {
+      this.syncFailCount++;
+      console.error(`Error syncing user stats to DB (fail count: ${this.syncFailCount}):`, error);
+
+      // 連続失敗が多い場合はデータを破棄（メモリリーク防止）
+      if (this.syncFailCount >= 5) {
+        console.error('Too many sync failures, discarding sync queue to prevent memory leak');
+        this.syncFailCount = 0;
+        return; // データを戻さない
+      }
+
+      // エラー時は同期キューに戻す（サイズ制限を尊重）
+      for (const [hash, stats] of toSync) {
+        if (this.syncQueue.size >= this.SYNC_QUEUE_MAX_SIZE) break;
         this.syncQueue.set(hash, stats);
-      });
+      }
     }
   }
 
@@ -264,13 +309,16 @@ export class UserHistoryManager {
   getStats() {
     const hotCacheUsers = this.hotCache.size;
     const syncQueueUsers = this.syncQueue.size;
-    const estimatedMemory = (hotCacheUsers + syncQueueUsers) * 13; // bytes (13 bytes per user in new structure)
-    
+    const estimatedMemory = (hotCacheUsers + syncQueueUsers) * 28; // bytes (より正確な見積もり: 16 hash + 12 stats)
+
     return {
       hotCacheUsers,
       syncQueueUsers,
       estimatedMemoryKB: Math.round(estimatedMemory / 1024),
-      estimatedMemoryMB: Math.round(estimatedMemory / 1024 / 1024 * 100) / 100
+      estimatedMemoryMB: Math.round(estimatedMemory / 1024 / 1024 * 100) / 100,
+      lastSyncAgo: Math.round((Date.now() - this.lastSync) / 1000), // 秒
+      syncFailCount: this.syncFailCount,
+      queueUtilization: Math.round((syncQueueUsers / this.SYNC_QUEUE_MAX_SIZE) * 100) // %
     };
   }
 
