@@ -43,6 +43,9 @@ FROM base
 # Install sqlite3 CLI for maintenance
 RUN apt-get update -qq && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
+# yarn 4.1.0をcorepackにプリインストール（起動時のダウンロードを回避）
+RUN corepack prepare yarn@4.1.0 --activate
+
 # Copy built application
 COPY --from=build /app /app
 

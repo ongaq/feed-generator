@@ -8,7 +8,9 @@
       "Bash(heroku pg:psql:*)",
       "Bash(pnpm build:content:*)",
       "WebSearch",
-      "WebFetch"
+      "WebFetch",
+      "Bash(fly logs:*)",
+      "Bash(yarn build)"
     ],
     "deny": []
   }
