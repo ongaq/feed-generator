@@ -15,6 +15,11 @@ import { Database } from '../db'
 
 export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
+  private lastEventTime: number = Date.now()
+  private timeoutCheckInterval: NodeJS.Timeout | null = null
+
+  // タイムアウト設定（5分間イベントがなければ再接続）
+  private static readonly EVENT_TIMEOUT_MS = 5 * 60 * 1000
 
   constructor(public db: Database, public service: string) {
     this.sub = new Subscription({
@@ -26,7 +31,7 @@ export abstract class FirehoseSubscriptionBase {
           // seq フィールドが BigInt 型の場合、Number 型に変換
           if (typeof value === 'object' && value !== null && 'seq' in value) {
             let seq = (value as any).seq;
-            
+
             if (typeof seq === 'bigint') {
               seq = Number(seq);
             }
@@ -51,9 +56,69 @@ export abstract class FirehoseSubscriptionBase {
 
   abstract handleEvent(evt: RepoEvent): Promise<void>
 
+  private startTimeoutCheck(subscriptionReconnectDelay: number) {
+    // 既存のチェックがあれば停止
+    this.stopTimeoutCheck()
+
+    // 1分ごとにタイムアウトをチェック
+    this.timeoutCheckInterval = setInterval(() => {
+      const elapsed = Date.now() - this.lastEventTime
+      if (elapsed > FirehoseSubscriptionBase.EVENT_TIMEOUT_MS) {
+        console.warn(`Firehose timeout: no events for ${Math.round(elapsed / 1000)}s, reconnecting...`)
+        this.stopTimeoutCheck()
+
+        // サブスクリプションを再作成して再接続
+        this.sub = new Subscription({
+          service: this.service,
+          method: ids.ComAtprotoSyncSubscribeRepos,
+          getParams: () => this.getCursor(),
+          validate: (value: unknown) => {
+            try {
+              if (typeof value === 'object' && value !== null && 'seq' in value) {
+                let seq = (value as any).seq;
+                if (typeof seq === 'bigint') {
+                  seq = Number(seq);
+                }
+                if (!Number.isInteger(seq)) {
+                  throw new Error('seq must be an integer')
+                }
+                (value as any).seq = seq;
+              }
+              return lexicons.assertValidXrpcMessage<RepoEvent>(
+                ids.ComAtprotoSyncSubscribeRepos,
+                value,
+              )
+            } catch (err) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('repo subscription skipped invalid message', err.message)
+              }
+            }
+          },
+        })
+
+        // 再接続
+        setTimeout(() => this.run(subscriptionReconnectDelay), subscriptionReconnectDelay)
+      }
+    }, 60 * 1000) // 1分ごとにチェック
+  }
+
+  private stopTimeoutCheck() {
+    if (this.timeoutCheckInterval) {
+      clearInterval(this.timeoutCheckInterval)
+      this.timeoutCheckInterval = null
+    }
+  }
+
   async run(subscriptionReconnectDelay: number) {
+    // タイムアウト監視を開始
+    this.lastEventTime = Date.now()
+    this.startTimeoutCheck(subscriptionReconnectDelay)
+
     try {
       for await (const evt of this.sub) {
+        // イベント受信時刻を更新
+        this.lastEventTime = Date.now()
+
         try {
           await this.handleEvent(evt)
         } catch (err) {
@@ -66,6 +131,7 @@ export abstract class FirehoseSubscriptionBase {
       }
     } catch (err) {
       console.error('repo subscription errored', err)
+      this.stopTimeoutCheck()
       setTimeout(() => this.run(subscriptionReconnectDelay), subscriptionReconnectDelay)
     }
   }
