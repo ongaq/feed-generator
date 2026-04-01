@@ -10,7 +10,8 @@
       "WebSearch",
       "WebFetch",
       "Bash(fly logs:*)",
-      "Bash(yarn build)"
+      "Bash(yarn build)",
+      "Bash(fly deploy:*)"
     ],
     "deny": []
   }
