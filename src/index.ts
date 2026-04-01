@@ -61,7 +61,9 @@ const run = async () => {
       console.warn(message);
 
       // Discord Webhookに通知
-      fetch('https://discord.com/api/webhooks/1488863692542972154/2OJbpXqjmIeBZYtt_IOPZIESirjAXBuQ8x5v0RUezfM6DdEDbT5uvl2SkJVYfPGeD37A', {
+      const discordWebhook = process.env.DISCORD_WEBHOOK_URL;
+      if (!discordWebhook) return;
+      fetch(discordWebhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
