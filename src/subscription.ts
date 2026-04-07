@@ -73,7 +73,7 @@ const strongGameKeywords = [
   '次元界オーナメント', '宇宙封印ステーション', '汎銀河商事会社', '天体階差機関', '盗賊公国タリア', '星々の競技場',
   '折れた竜骨', '蒼穹戦線グラモス', '顕世の出雲と高天の神国',
   // キャラ名（固有度の高いもの）
-  '桂乃芬', '鏡流', 'スヴァローグ', 'ル(ア|ァ)ン(・)?メ(ェ)?イ', '停雲',
+  '桂乃芬', '鏡流', 'スヴァローグ', 'ル(ア|ァ)ン(・)?メ(ェ)?イ', '停雲', '千治(・)?刃',
   '丹(恒|楓)', '(丹恒(・)?)?飲月', '(Dr\\.)?レイシオ', '符玄', '素裳', '寒鴉', '青雀',
   '雪衣', 'カカリア', 'アルジェンティ', 'ブートヒル', '三月なのか',
   'カカワーシャ', 'シヴォーン', 'エヴィキン(人|族)', '忘川守', 'オスワルド(・)?シュナイダー', 'ワー(ビ|ヴィ)ック',
@@ -97,6 +97,7 @@ const ambiguousKeywords = [
 const matchPatterns = [...strongGameKeywords, ...ambiguousKeywords];
 
 const BAN_USER = [
+  'did:plc:kmem66uesdrugvvzjhew5tmx',
   'did:plc:pwulbd4luduxjsdhbylismds',
   'did:plc:cfcqlntztvxgq6vb7dtne5gz',
   'did:plc:oag62syeramadgfv57dlk2vr',
