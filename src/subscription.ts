@@ -97,6 +97,7 @@ const ambiguousKeywords = [
 const matchPatterns = [...strongGameKeywords, ...ambiguousKeywords];
 
 const BAN_USER = [
+  'did:plc:kohjwoxxoi6pefefbrs5hvdq',
   'did:plc:kmem66uesdrugvvzjhew5tmx',
   'did:plc:pwulbd4luduxjsdhbylismds',
   'did:plc:cfcqlntztvxgq6vb7dtne5gz',
@@ -135,6 +136,8 @@ const excludePatterns = [
   'starrailpass',
   'kakuyomu',
   'Топовые',
+  'FF14',
+  'NTE',
   'トレンド',
   'オープンチャット',
   'ポケモン',
